@@ -67,7 +67,13 @@ def list_pom_files_in_subfolders(bucket, folder_key):
 
 
 def get_group_id(key):
-    return '.'.join(key.split('/')[:-3])
+    folder_names_but_last_three = key.split('/')[:-3]
+    if folder_names_but_last_three[0] in ('maven', 'maven2'):
+        # artifacts are usually uploaded under maven2/ which is not part of the groupId
+        folder_names_without_maven_prefix = folder_names_but_last_three[1:]
+    else:
+        folder_names_without_maven_prefix = folder_names_but_last_three
+    return '.'.join(folder_names_without_maven_prefix)
 
 
 def get_artifact_id(key):
@@ -105,8 +111,7 @@ def generate_release_maven_metadata(folder_content_keys):
 
 def generate_versions(folder_content_keys):
     return sorted(list(set([
-        get_version(key) for key in folder_content_keys
-        if key
+        get_version(key) for key in folder_content_keys if key
     ])))
 
 
