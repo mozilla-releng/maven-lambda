@@ -12,15 +12,12 @@ from xml.etree import cElementTree as ET
 
 print('Loading function')
 
-# s3 = boto3.client('s3')
 s3 = boto3.resource('s3')
 
 METADATA_BASE_FILE_NAME = 'maven-metadata.xml'
 
-def lambda_handler(event, context):
-    #print("Received event: " + json.dumps(event, indent=2))
 
-    # Get the object from the event and show its content type
+def lambda_handler(event, context):
     bucket_name = event['Records'][0]['s3']['bucket']['name']
     bucket = s3.Bucket(bucket_name)
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
@@ -87,6 +84,7 @@ def generate_release_maven_metadata(folder_content_keys):
 
     return ET.tostring(root, encoding="utf8")
 
+
 def generate_versions(folder_content_keys):
     return sorted(list(set([
         get_version(key) for key in folder_content_keys
@@ -103,13 +101,14 @@ def get_latest_version(versions):
     latest_strict_version = reduce(lambda x, y: x if x >= y else y, strict_versions)
     return str(latest_strict_version)
 
+
 def upload_s3_file(bucket_name, folder, file_name, data, content_type='text/plain'):
     key = '{}/{}'.format(folder, file_name)
-    return s3.Object(bucket_name, key).put(Body=data, ContentEncoding='utf8', ContentType=content_type)
+    return s3.Object(bucket_name, key).put(Body=data, ContentType=content_type)
+
 
 def generate_checksums(data):
     return {
         'md5': hashlib.md5(data).hexdigest(),
         'sha1': hashlib.sha1(data).hexdigest(),
     }
-    
