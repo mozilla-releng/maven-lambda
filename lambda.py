@@ -32,7 +32,7 @@ def lambda_handler(event, context):
     try:
         folder = get_folder_key(key)
         print('Extracted folder "{}" from key'.format(folder))
-        folder_content_keys = list_content_in_subfolders(bucket, folder)
+        folder_content_keys = list_pom_files_in_subfolders(bucket, folder)
         print('Found .pom files: {}'.format(folder_content_keys))
         metadata = generate_release_maven_metadata(folder_content_keys)
         print('Generated maven-metadata content: {}'.format(metadata))
@@ -56,10 +56,10 @@ def get_folder_key(key):
     return '/'.join(key.split('/')[:-2])
 
 
-def list_content_in_subfolders(bucket, folder_key):
+def list_pom_files_in_subfolders(bucket, folder_key):
     return [
-        file.key for file in bucket.objects.all()
-        if file.key.startswith(folder_key) and '/' in file.key.strip('{}/'.format(folder_key))
+        file.key for file in bucket.objects.filter(Prefix=folder_key)
+        if file.key.endswith('.pom')
     ]
 
 
