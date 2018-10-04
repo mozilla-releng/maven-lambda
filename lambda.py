@@ -53,7 +53,10 @@ def lambda_handler(event, context):
 
 
 def get_folder_key(key):
-    return '/'.join(key.split('/')[:-2])
+    split_path_without_last_two_items = key.split('/')[:-2]
+    folder = '/'.join(split_path_without_last_two_items)
+    folder_with_trailing_slash = '{}/'.format(folder)
+    return folder_with_trailing_slash
 
 
 def list_pom_files_in_subfolders(bucket, folder_key):
