@@ -10,6 +10,8 @@ from distutils.version import StrictVersion
 from functools import reduce
 from xml.etree import cElementTree as ET
 
+
+# logging doesn't work on AWS Lambda, at first
 print('Loading function')
 
 s3 = boto3.resource('s3')
@@ -18,23 +20,36 @@ METADATA_BASE_FILE_NAME = 'maven-metadata.xml'
 
 
 def lambda_handler(event, context):
+    print('Processing a new event...')
+    print('Event: {}. Context: {}'.format(event, context))
+
     bucket_name = event['Records'][0]['s3']['bucket']['name']
-    bucket = s3.Bucket(bucket_name)
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
+    print('Processing key "{}" from bucket "{}"...'.format(key, bucket_name))
+
+    bucket = s3.Bucket(bucket_name)
+
     try:
         folder = get_folder_key(key)
+        print('Extracted folder "{}" from key'.format(folder))
         folder_content_keys = list_content_in_subfolders(bucket, folder)
+        print('Found .pom files: {}'.format(folder_content_keys))
         metadata = generate_release_maven_metadata(folder_content_keys)
+        print('Generated maven-metadata content: {}'.format(metadata))
         upload_s3_file(bucket_name, folder, METADATA_BASE_FILE_NAME, metadata, content_type='text/xml')
+        print('Uploaded new maven-metadata.xml')
 
         checksums = generate_checksums(metadata)
-        print(checksums)
+        print('New maven-metadata.xml checksums: {}'.format(checksums))
         for type_, sum_ in checksums.items():
             upload_s3_file(bucket_name, folder, '{}.{}'.format(METADATA_BASE_FILE_NAME, type_), sum_)
+            print('Uploaded new {} checksum file'.format(type_))
 
     except Exception as e:
         print(e)
-        raise e
+        raise
+
+    print('Done processing folder "{}"'.format(folder))
 
 
 def get_folder_key(key):
