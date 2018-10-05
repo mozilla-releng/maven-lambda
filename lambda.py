@@ -1,8 +1,6 @@
 
 import boto3
-import distutils
 import hashlib
-import json
 import urllib.parse
 
 from datetime import datetime
@@ -102,7 +100,6 @@ def generate_release_maven_metadata(folder_content_keys):
 
     for version in all_versions:
         ET.SubElement(versions, 'version').text = version
-
 
     ET.SubElement(versioning, 'lastUpdated').text = generate_last_updated()
 
