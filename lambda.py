@@ -123,6 +123,7 @@ def get_latest_version(versions):
 
 
 def upload_s3_file(bucket_name, folder, file_name, data, content_type='text/plain'):
+    folder = folder.rstrip('/')
     key = '{}/{}'.format(folder, file_name)
     return s3.Object(bucket_name, key).put(Body=data, ContentType=content_type)
 
