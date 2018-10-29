@@ -1,5 +1,6 @@
 # pyup: ignore file
 -r requirements.txt.in
 flake8
+freezegun
 pytest
 pytest-cov
