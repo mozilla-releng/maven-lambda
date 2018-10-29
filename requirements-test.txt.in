@@ -1,0 +1,5 @@
+# pyup: ignore file
+-r requirements.txt.in
+flake8
+pytest
+pytest-cov

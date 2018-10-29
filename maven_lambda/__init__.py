@@ -34,13 +34,17 @@ def lambda_handler(event, context):
         print('Found .pom files: {}'.format(folder_content_keys))
         metadata = generate_release_maven_metadata(folder_content_keys)
         print('Generated maven-metadata content: {}'.format(metadata))
-        upload_s3_file(bucket_name, folder, METADATA_BASE_FILE_NAME, metadata, content_type='text/xml')
+        upload_s3_file(
+            bucket_name, folder, METADATA_BASE_FILE_NAME, metadata, content_type='text/xml'
+        )
         print('Uploaded new maven-metadata.xml')
 
         checksums = generate_checksums(metadata)
         print('New maven-metadata.xml checksums: {}'.format(checksums))
         for type_, sum_ in checksums.items():
-            upload_s3_file(bucket_name, folder, '{}.{}'.format(METADATA_BASE_FILE_NAME, type_), sum_)
+            upload_s3_file(
+                bucket_name, folder, '{}.{}'.format(METADATA_BASE_FILE_NAME, type_), sum_
+            )
             print('Uploaded new {} checksum file'.format(type_))
 
     except Exception as e:
