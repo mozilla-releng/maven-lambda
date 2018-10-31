@@ -1,6 +1,7 @@
 
 import boto3
 import hashlib
+import io
 import urllib.parse
 
 from datetime import datetime
@@ -107,7 +108,12 @@ def generate_release_maven_metadata(folder_content_keys):
 
     ET.SubElement(versioning, 'lastUpdated').text = generate_last_updated()
 
-    return ET.tostring(root, encoding="utf8")
+    # XXX ET.tostring() strips the xml_declaration out if using encoding='unicode'
+    stream = io.StringIO()
+    ET.ElementTree(root).write(
+        stream, encoding='unicode', xml_declaration=True, method='xml', short_empty_elements=True
+    )
+    return stream.getvalue()
 
 
 def generate_versions(folder_content_keys):
@@ -133,6 +139,8 @@ def upload_s3_file(bucket_name, folder, file_name, data, content_type='text/plai
 
 
 def generate_checksums(data):
+    if isinstance(data, str):
+        data = data.encode()
     return {
         'md5': hashlib.md5(data).hexdigest(),
         'sha1': hashlib.sha1(data).hexdigest(),
