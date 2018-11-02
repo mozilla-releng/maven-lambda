@@ -155,15 +155,40 @@ def test_generate_last_updated():
     assert generate_last_updated() == '20181029160030'
 
 
-def test_get_latest_version():
-    assert get_latest_version([
+@pytest.mark.parametrize('versions, exclude_snapshots, expected', ((
+    (
         '64.0.20181018103737',
         '63.0.20180830111743',
         '65.0.20181028102554',
         '63.0.20180830100125',
         '65.0.20181029100346',
         '64.0.20181019100100',
-    ]) == '65.0.20181029100346'
+    ),
+    False,
+    '65.0.20181029100346',
+), (
+    ('64.0', '64.0-SNAPSHOT'),
+    False,
+    '64.0',
+), (
+    ('64.0', '64.0-SNAPSHOT'),
+    True,
+    '64.0',
+), (
+    ('64.0', '64.0-SNAPSHOT', '65.0'),
+    False,
+    '65.0',
+), (
+    ('63.0-SNAPSHOT', '64.0-SNAPSHOT', '65.0-SNAPSHOT'),
+    False,
+    '65.0-SNAPSHOT',
+), (
+    ('63.0-SNAPSHOT', '64.0-SNAPSHOT', '65.0-SNAPSHOT'),
+    True,
+    None,
+)))
+def test_get_latest_version(versions, exclude_snapshots, expected):
+    assert get_latest_version(versions, exclude_snapshots) == expected
 
 
 def test_upload_s3_file(monkeypatch):

@@ -5,8 +5,8 @@ import io
 import urllib.parse
 
 from datetime import datetime
-from distutils.version import StrictVersion
 from functools import reduce
+from mozilla_version.maven import MavenVersion
 from xml.etree import cElementTree as ET
 
 
@@ -90,7 +90,8 @@ def get_version(key):
 def generate_release_maven_metadata(folder_content_keys):
     first_listed_version_key = folder_content_keys[0]
     all_versions = generate_versions(folder_content_keys)
-    latest_version = get_latest_version(all_versions)
+    latest_version = get_latest_version(all_versions, exclude_snapshots=False)
+    latest_non_snapshot_version = get_latest_version(all_versions, exclude_snapshots=True)
 
     root = ET.Element('metadata')
     ET.SubElement(root, 'groupId').text = get_group_id(first_listed_version_key)
@@ -99,7 +100,8 @@ def generate_release_maven_metadata(folder_content_keys):
     versioning = ET.SubElement(root, 'versioning')
 
     ET.SubElement(versioning, 'latest').text = latest_version
-    ET.SubElement(versioning, 'release').text = latest_version
+    ET.SubElement(versioning, 'release').text = '' if latest_non_snapshot_version is None \
+        else latest_non_snapshot_version
 
     versions = ET.SubElement(versioning, 'versions')
 
@@ -111,7 +113,7 @@ def generate_release_maven_metadata(folder_content_keys):
     # XXX ET.tostring() strips the xml_declaration out if using encoding='unicode'
     stream = io.StringIO()
     ET.ElementTree(root).write(
-        stream, encoding='unicode', xml_declaration=True, method='xml', short_empty_elements=True
+        stream, encoding='unicode', xml_declaration=True, method='xml', short_empty_elements=False
     )
     return stream.getvalue()
 
@@ -126,10 +128,14 @@ def generate_last_updated():
     return datetime.utcnow().strftime('%Y%m%d%H%M%S')
 
 
-def get_latest_version(versions):
-    strict_versions = [StrictVersion(version) for version in versions]
-    latest_strict_version = reduce(lambda x, y: x if x >= y else y, strict_versions)
-    return str(latest_strict_version)
+def get_latest_version(versions, exclude_snapshots=False):
+    maven_versions = [MavenVersion.parse(version) for version in versions]
+    if exclude_snapshots:
+        maven_versions = [version for version in maven_versions if not version.is_snapshot]
+    if not maven_versions:
+        return None
+    latest_version = reduce(lambda x, y: x if x >= y else y, maven_versions)
+    return str(latest_version)
 
 
 def upload_s3_file(bucket_name, folder, file_name, data, content_type='text/plain'):
