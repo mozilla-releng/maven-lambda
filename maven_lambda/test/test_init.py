@@ -9,10 +9,12 @@ from maven_lambda import (
     generate_release_maven_metadata,
     generate_versions,
     get_artifact_id,
-    get_folder_key,
+    get_artifact_folder,
     get_group_id,
     get_latest_version,
     get_version,
+    get_version_folder,
+    is_snapshot,
     lambda_handler,
     list_pom_files_in_subfolders,
     upload_s3_file,
@@ -50,10 +52,32 @@ def test_lambda_handler(monkeypatch):
         lambda_handler(event, context)
 
 
-def test_get_folder_key():
-    assert get_folder_key(
-        'org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',     # noqa: E501
-    ) == 'org/mozilla/geckoview/geckoview-nightly-x86/'
+@pytest.mark.parametrize('key, expected', ((
+    'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',    # noqa: E501
+    'maven2/org/mozilla/geckoview/geckoview-nightly-x86/',
+), (
+    'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom',
+    'maven2/org/mozilla/components/browser-domains/',
+), (
+    'maven2/org/mozilla/components/browser-domains/0.30.0/browser-domains-0.30.0.pom',
+    'maven2/org/mozilla/components/browser-domains/',
+)))
+def test_get_artifact_folder(key, expected):
+    assert get_artifact_folder(key) == expected
+
+
+@pytest.mark.parametrize('key, expected', ((
+    'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',    # noqa: E501
+    'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/',
+), (
+    'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom',
+    'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/',
+), (
+    'maven2/org/mozilla/components/browser-domains/0.30.0/browser-domains-0.30.0.pom',
+    'maven2/org/mozilla/components/browser-domains/0.30.0/',
+)))
+def test_get_version_folder(key, expected):
+    assert get_version_folder(key) == expected
 
 
 def test_list_pom_files_in_subfolders():
@@ -213,3 +237,12 @@ def test_generate_checksums(data):
         'md5': 'a48fba03a9ac529b358935164826d9fe',
         'sha1': '714f4de20aa1899ed09e22a82304e12d4658eac1',
     }
+
+
+@pytest.mark.parametrize('key, expected', (
+    ('maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/', True),
+    ('maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom', True),   # noqa: E501
+    ('maven2/org/mozilla/components/browser-domains/0.30.0/browser-domains-0.30.0.pom', False)                              # noqa: E501
+))
+def test_is_snapshot(key, expected):
+    assert is_snapshot(key) == expected

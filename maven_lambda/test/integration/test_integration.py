@@ -104,30 +104,36 @@ from maven_lambda import lambda_handler
     ),
     'maven2/org/mozilla/components/browser-domains/',
     {
-        # TODO 
-        # 'snapshot_metadata': {
-        #     'md5_data': '',
-        #     'md5_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.md5',      # noqa: E501
-        #     'prefix': 'maven2/org/mozilla/components/browser-domains/',
-        #     'sha1_data': '',
-        #     'sha1_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.sha1',    # noqa: E501
-        #     'xml_data': (
-        #         "<?xml version='1.0' encoding='UTF-8'?>\n"
-        #         "<metadata>"
-        #             "<groupId>org.mozilla.geckoview</groupId>"          # noqa: E131
-        #             "<artifactId>geckoview-nightly-x86</artifactId>"
-        #             "<versioning>"
-        #                 "<latest>0.30.0-SNAPSHOT</latest>"          # noqa: E131
-        #                 "<release></release>"
-        #                 "<versions>"
-        #                     "<version>0.30.0-SNAPSHOT</version>"    # noqa: E131
-        #                 "</versions>"
-        #                 "<lastUpdated>20181029160030</lastUpdated>"
-        #             "</versioning>"
-        #         "</metadata>"
-        #     ),
-        #     'xml_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml',          # noqa: E501
-        # },
+        'snapshot_metadata': {
+            'md5_data': '263d4ab1c3fed3aa462f7f64c5445856',
+            'md5_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.md5',      # noqa: E501
+            'prefix': 'maven2/org/mozilla/components/browser-domains/',
+            'sha1_data': '286e6535dd95d8ab94f5ba6433183d40f88814e4',
+            'sha1_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.sha1',    # noqa: E501
+            'xml_data': (
+                "<?xml version='1.0' encoding='UTF-8'?>\n"
+                "<metadata>"
+                  "<groupId>org.mozilla.components</groupId>"
+                  "<artifactId>browser-domains</artifactId>"
+                  "<version>0.30.0-SNAPSHOT</version>"
+                  "<versioning>"
+                    "<snapshot>"
+                      "<timestamp>20181029.154529</timestamp>"
+                      "<buildNumber>1</buildNumber>"
+                    "</snapshot>"
+                    "<lastUpdated>20181029160030</lastUpdated>"
+                    "<snapshotVersions>"
+                      "<snapshotVersion>"
+                        "<extension>aar</extension>"
+                        "<value>0.30.0-20181029.154529-1</value>"
+                        "<updated>20181029154529</updated>"
+                        "</snapshotVersion>"
+                      "</snapshotVersions>"
+                  "</versioning>"
+                "</metadata>"
+            ),
+            'xml_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml',          # noqa: E501
+        },
         'version_metadata': {
             'md5_data': '3bf0e86cacbce020e5e041f026455160',
             'md5_key': 'maven2/org/mozilla/components/browser-domains/maven-metadata.xml.md5',
@@ -170,6 +176,7 @@ def test_lambda_handler(monkeypatch, inserted_key, bucket_keys, expected_prefix,
 
     s3_mock = MagicMock()
     bucket_mock = MagicMock()
+    bucket_mock.name = 'some_bucket_name'   # "name" is an argument to the Mock constructor
     object_mock = MagicMock()
 
     bucket_mock.objects.filter.return_value = [MagicMock(key=key) for key in bucket_keys]
