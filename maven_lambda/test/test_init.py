@@ -127,7 +127,7 @@ def test_get_version():
 
 @freeze_time('2018-10-29 16:00:30')
 def test_generate_release_maven_metadata():
-    assert generate_release_maven_metadata([
+    assert generate_release_maven_metadata('some_bucket_name', [
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',     # noqa: E501
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.pom',     # noqa: E501
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',     # noqa: E501

@@ -2,6 +2,8 @@
 import boto3
 import hashlib
 import io
+import os
+import tempfile
 import urllib.parse
 
 from datetime import datetime
@@ -16,6 +18,11 @@ print('Loading function')
 s3 = boto3.resource('s3')
 
 METADATA_BASE_FILE_NAME = 'maven-metadata.xml'
+
+ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0')
+XML_NAMESPACES = {
+    'm': 'http://maven.apache.org/POM/4.0.0',
+}
 
 
 def lambda_handler(event, context):
@@ -33,7 +40,10 @@ def lambda_handler(event, context):
         print('Extracted artifact folder "{}" from key'.format(artifact_folder))
         poms_in_artifact_folder = list_pom_files_in_subfolders(bucket, artifact_folder)
         print('Found .pom in artifact folder (and subfolders): {}'.format(poms_in_artifact_folder))
-        lol(bucket, artifact_folder, poms_in_artifact_folder, generate_release_maven_metadata)
+        craft_and_upload_maven_metadata(
+            bucket, artifact_folder, poms_in_artifact_folder,
+            metadata_function=generate_release_maven_metadata
+        )
 
         if is_snapshot(key):
             version_folder = get_version_folder(key)
@@ -43,7 +53,10 @@ def lambda_handler(event, context):
                 if key.startswith(version_folder)
             ]
             print('.pom in version folder: {}'.format(poms_in_version_folder))
-            lol(bucket, version_folder, poms_in_version_folder, generate_snapshot_listing_metadata)
+            craft_and_upload_maven_metadata(
+                bucket, version_folder, poms_in_version_folder,
+                metadata_function=generate_snapshot_listing_metadata
+            )
 
     except Exception as e:
         print(e)
@@ -74,11 +87,12 @@ def list_pom_files_in_subfolders(bucket, folder_key):
     ]
 
 
-def lol(bucket, folder, pom_files, metadata_function):
-    metadata = metadata_function(pom_files)
+def craft_and_upload_maven_metadata(bucket, folder, pom_files, metadata_function):
+    bucket_name = bucket.name
+    metadata = metadata_function(bucket_name, pom_files)
     print('Generated maven-metadata content: {}'.format(metadata))
     upload_s3_file(
-        bucket.name, folder, METADATA_BASE_FILE_NAME, metadata, content_type='text/xml'
+        bucket_name, folder, METADATA_BASE_FILE_NAME, metadata, content_type='text/xml'
     )
     print('Uploaded new maven-metadata.xml')
 
@@ -86,7 +100,7 @@ def lol(bucket, folder, pom_files, metadata_function):
     print('New maven-metadata.xml checksums: {}'.format(checksums))
     for type_, sum_ in checksums.items():
         upload_s3_file(
-            bucket.name, folder, '{}.{}'.format(METADATA_BASE_FILE_NAME, type_), sum_
+            bucket_name, folder, '{}.{}'.format(METADATA_BASE_FILE_NAME, type_), sum_
         )
         print('Uploaded new {} checksum file'.format(type_))
 
@@ -109,7 +123,7 @@ def get_version(key):
     return key.split('/')[-2]
 
 
-def generate_release_maven_metadata(folder_content_keys):
+def generate_release_maven_metadata(_, folder_content_keys):
     all_versions = generate_versions(folder_content_keys)
     latest_version = get_latest_version(all_versions, exclude_snapshots=False)
     latest_non_snapshot_version = get_latest_version(all_versions, exclude_snapshots=True)
@@ -151,12 +165,12 @@ def _convert_xml_root_to_string(root):
     return stream.getvalue()
 
 
-def generate_snapshot_listing_metadata(folder_content_keys):
-    snapshots_metadata = get_snapshots_metadata(folder_content_keys)
+def generate_snapshot_listing_metadata(bucket_name, pom_files_keys):
+    snapshots_metadata = get_snapshots_metadata(bucket_name, pom_files_keys)
     latest_snapshot_metadata = find_latest_snapshot(snapshots_metadata)
 
-    root = _generate_xml_root_of_common_maven_metadata(folder_content_keys)
-    ET.SubElement(root, 'version').text = get_version(folder_content_keys[0])
+    root = _generate_xml_root_of_common_maven_metadata(pom_files_keys)
+    ET.SubElement(root, 'version').text = get_version(pom_files_keys[0])
 
     versioning = ET.SubElement(root, 'versioning')
     snapshot = ET.SubElement(versioning, 'snapshot')
@@ -178,14 +192,43 @@ def generate_snapshot_listing_metadata(folder_content_keys):
     return _convert_xml_root_to_string(root)
 
 
-def get_snapshots_metadata(all_snapshots):
-    # TODO: Do not hardcode anymore
+def get_snapshots_metadata(bucket_name, all_snapshot_pom_keys):
+    pom_keys_and_file_names = [
+        (key, key.split('/')[-1])
+        for key in all_snapshot_pom_keys
+    ]
+
     return [{
-        'build_number': 1,
-        'extension': 'aar',
-        'timestamp': '20181029.154529',
-        'version': '0.30.0',
-    }]
+        'build_number': _extract_build_number_from_file_name(file_name),
+        'extension': _fetch_extension_from_pom_file_content(bucket_name, key),
+        'timestamp': _extract_timestamp_from_file_name(file_name),
+        'version': _extract_version_from_file_name(file_name),
+    } for key, file_name in pom_keys_and_file_names]
+
+
+def _extract_build_number_from_file_name(file_name):
+    file_name_without_extension = file_name.rstrip('.pom')
+    build_number = file_name_without_extension.split('-')[-1]
+    return int(build_number)
+
+
+def _fetch_extension_from_pom_file_content(bucket_name, pom_key):
+    with tempfile.TemporaryDirectory() as d:
+        temporary_pom_path = os.path.join(d, 'pom.xml')
+        s3.Bucket(bucket_name).download_file(pom_key, temporary_pom_path)
+        tree = ET.parse(temporary_pom_path)
+
+    root = tree.getroot()
+    packaging_element = root.find('m:packaging', XML_NAMESPACES)
+    return packaging_element.text
+
+
+def _extract_timestamp_from_file_name(file_name):
+    return file_name.split('-')[-2]
+
+
+def _extract_version_from_file_name(file_name):
+    return file_name.split('-')[-3]
 
 
 def find_latest_snapshot(all_snapshots_metadata):

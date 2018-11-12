@@ -86,29 +86,32 @@ from maven_lambda import lambda_handler
         },
     },
 ), (
-    'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom',                   # noqa: E501
+    'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',                   # noqa: E501
     (
         # Full content of a folder
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',               # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom.md5',           # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom.sha1',          # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar',               # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar.md5',           # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar.sha1',          # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar',       # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar.md5',   # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar.sha1',  # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar',       # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar.md5',   # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar.sha1',  # noqa: E501
+
+        # Partial content only
         'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom',               # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom.md5',           # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom.sha1',          # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.jar',               # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.jar.md5',           # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.jar.sha1',          # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1-sources.jar',       # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1-sources.jar.md5',   # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1-sources.jar.sha1',  # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1-javadoc.jar',       # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1-javadoc.jar.md5',   # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1-javadoc.jar.sha1',  # noqa: E501
     ),
     'maven2/org/mozilla/components/browser-domains/',
     {
         'snapshot_metadata': {
-            'md5_data': '263d4ab1c3fed3aa462f7f64c5445856',
+            'md5_data': '3e61e09c875afb80475d7acc857dc5c0',
             'md5_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.md5',      # noqa: E501
             'prefix': 'maven2/org/mozilla/components/browser-domains/',
-            'sha1_data': '286e6535dd95d8ab94f5ba6433183d40f88814e4',
+            'sha1_data': '9b3cb2ca04652606e543957ca954c4f2a9a39d5b',
             'sha1_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.sha1',    # noqa: E501
             'xml_data': (
                 "<?xml version='1.0' encoding='UTF-8'?>\n"
@@ -118,17 +121,22 @@ from maven_lambda import lambda_handler
                   "<version>0.30.0-SNAPSHOT</version>"
                   "<versioning>"
                     "<snapshot>"
-                      "<timestamp>20181029.154529</timestamp>"
-                      "<buildNumber>1</buildNumber>"
+                      "<timestamp>20181030.164630</timestamp>"
+                      "<buildNumber>2</buildNumber>"
                     "</snapshot>"
                     "<lastUpdated>20181029160030</lastUpdated>"
                     "<snapshotVersions>"
                       "<snapshotVersion>"
                         "<extension>aar</extension>"
+                        "<value>0.30.0-20181030.164630-2</value>"
+                        "<updated>20181030164630</updated>"
+                      "</snapshotVersion>"
+                      "<snapshotVersion>"
+                        "<extension>aar</extension>"
                         "<value>0.30.0-20181029.154529-1</value>"
                         "<updated>20181029154529</updated>"
-                        "</snapshotVersion>"
-                      "</snapshotVersions>"
+                      "</snapshotVersion>"
+                    "</snapshotVersions>"
                   "</versioning>"
                 "</metadata>"
             ),
@@ -177,17 +185,25 @@ def test_lambda_handler(monkeypatch, inserted_key, bucket_keys, expected_prefix,
     s3_mock = MagicMock()
     bucket_mock = MagicMock()
     bucket_mock.name = 'some_bucket_name'   # "name" is an argument to the Mock constructor
-    object_mock = MagicMock()
 
+    def fake_download(_, destination):
+        with open(destination, 'w') as f:
+            f.write('''<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <packaging>aar</packaging>
+</project>''')
+
+    bucket_mock.download_file.side_effect = fake_download
     bucket_mock.objects.filter.return_value = [MagicMock(key=key) for key in bucket_keys]
     s3_mock.Bucket.return_value = bucket_mock
+
+    object_mock = MagicMock()
     s3_mock.Object.return_value = object_mock
 
     monkeypatch.setattr('maven_lambda.s3', s3_mock)
 
     lambda_handler(event, context)
 
-    s3_mock.Bucket.assert_called_once_with('some_bucket_name')
     bucket_mock.objects.filter.assert_called_once_with(Prefix=expected_prefix)
 
     for expected_item in expected_metadata.values():
