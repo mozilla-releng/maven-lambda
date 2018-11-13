@@ -8,52 +8,52 @@ from maven_lambda import lambda_handler
 
 @freeze_time('2018-10-29 16:00:30')
 @pytest.mark.parametrize('inserted_key, bucket_keys, expected_prefix, expected_metadata', ((
-    'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom',             # noqa: E501
+    'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom',
     (
         # Full content of a folder
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',         # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.md5',     # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.sha1',    # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar',         # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar.md5',     # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar.sha1',    # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-sources.jar',         # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-sources.jar.md5',     # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-sources.jar.sha1',    # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-javadoc.jar',         # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-javadoc.jar.md5',     # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-javadoc.jar.sha1',    # noqa: E501
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-sources.jar',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-sources.jar.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-sources.jar.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-javadoc.jar',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-javadoc.jar.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-javadoc.jar.sha1',
 
         # Just partial content
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.pom',         # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.pom.md5',     # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.pom.sha1',    # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.jar',         # noqa: E501
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.jar',
 
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',         # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.md5',     # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.sha1',    # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar',         # noqa: E501
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar',
 
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.pom',         # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.pom.md5',     # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.pom.sha1',    # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.jar',         # noqa: E501
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.jar',
 
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.pom',         # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.pom.md5',     # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.pom.sha1',    # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.jar',         # noqa: E501
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.jar',
 
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.pom',         # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.pom.md5',     # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.pom.sha1',    # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.jar',         # noqa: E501
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.jar',
 
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom',         # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom.md5',     # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom.sha1',    # noqa: E501
-        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.jar',         # noqa: E501
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.jar',
     ),
     'maven2/org/mozilla/geckoview/geckoview-nightly-x86/',
     {
@@ -65,13 +65,13 @@ from maven_lambda import lambda_handler
             'xml_data': (
                 "<?xml version='1.0' encoding='UTF-8'?>\n"
                 "<metadata>"
-                    "<groupId>org.mozilla.geckoview</groupId>"          # noqa: E131
+                    "<groupId>org.mozilla.geckoview</groupId>"
                     "<artifactId>geckoview-nightly-x86</artifactId>"
                     "<versioning>"
-                        "<latest>65.0.20181029100346</latest>"          # noqa: E131
+                        "<latest>65.0.20181029100346</latest>"
                         "<release>65.0.20181029100346</release>"
                         "<versions>"
-                            "<version>63.0.20180830100125</version>"    # noqa: E131
+                            "<version>63.0.20180830100125</version>"
                             "<version>63.0.20180830111743</version>"
                             "<version>64.0.20181018103737</version>"
                             "<version>64.0.20181019100100</version>"
@@ -86,33 +86,33 @@ from maven_lambda import lambda_handler
         },
     },
 ), (
-    'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',                   # noqa: E501
+    'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',
     (
         # Full content of a folder
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',               # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom.md5',           # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom.sha1',          # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar',               # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar.md5',           # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar.sha1',          # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar',       # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar.md5',   # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar.sha1',  # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar',       # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar.md5',   # noqa: E501
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar.sha1',  # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom.md5',
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom.sha1',
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar',
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar.md5',
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar.sha1',
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar',
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar.md5',
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar.sha1',
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar',
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar.md5',
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar.sha1',
 
         # Partial content only
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom',               # noqa: E501
+        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom',
     ),
     'maven2/org/mozilla/components/browser-domains/',
     {
         'snapshot_metadata': {
             'md5_data': '3e61e09c875afb80475d7acc857dc5c0',
-            'md5_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.md5',      # noqa: E501
+            'md5_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.md5',
             'prefix': 'maven2/org/mozilla/components/browser-domains/',
             'sha1_data': '9b3cb2ca04652606e543957ca954c4f2a9a39d5b',
-            'sha1_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.sha1',    # noqa: E501
+            'sha1_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.sha1',
             'xml_data': (
                 "<?xml version='1.0' encoding='UTF-8'?>\n"
                 "<metadata>"
@@ -140,7 +140,7 @@ from maven_lambda import lambda_handler
                   "</versioning>"
                 "</metadata>"
             ),
-            'xml_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml',          # noqa: E501
+            'xml_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml',
         },
         'version_metadata': {
             'md5_data': '3bf0e86cacbce020e5e041f026455160',
@@ -151,13 +151,13 @@ from maven_lambda import lambda_handler
             'xml_data': (
                 "<?xml version='1.0' encoding='UTF-8'?>\n"
                 "<metadata>"
-                    "<groupId>org.mozilla.components</groupId>"      # noqa: E131
+                    "<groupId>org.mozilla.components</groupId>"
                     "<artifactId>browser-domains</artifactId>"
                     "<versioning>"
-                        "<latest>0.30.0-SNAPSHOT</latest>"          # noqa: E131
+                        "<latest>0.30.0-SNAPSHOT</latest>"
                         "<release></release>"
                         "<versions>"
-                            "<version>0.30.0-SNAPSHOT</version>"    # noqa: E131
+                            "<version>0.30.0-SNAPSHOT</version>"
                         "</versions>"
                         "<lastUpdated>20181029160030</lastUpdated>"
                     "</versioning>"
