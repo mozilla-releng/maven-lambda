@@ -24,6 +24,9 @@ XML_NAMESPACES = {
     'm': 'http://maven.apache.org/POM/4.0.0',
 }
 
+POM_TIMESTAMP = '%Y%m%d%H%M%S'
+SNAPSHOT_FILE_TIMESTAMP = '%Y%m%d.%H%M%S'
+
 
 def lambda_handler(event, context):
     print('Processing a new event...')
@@ -168,7 +171,7 @@ def _convert_xml_root_to_string(root):
 def generate_snapshot_listing_metadata(bucket_name, pom_files_keys):
     snapshots_metadata = get_snapshots_metadata(bucket_name, pom_files_keys)
     sorted_snapshot_metadata = sorted(
-        snapshots_metadata, key=lambda x: x['build_number'], reverse=True
+        snapshots_metadata, key=lambda x: x['timestamp'], reverse=True
     )
     latest_snapshot_metadata = sorted_snapshot_metadata[0]
 
@@ -177,7 +180,9 @@ def generate_snapshot_listing_metadata(bucket_name, pom_files_keys):
 
     versioning = ET.SubElement(root, 'versioning')
     snapshot = ET.SubElement(versioning, 'snapshot')
-    ET.SubElement(snapshot, 'timestamp').text = latest_snapshot_metadata['timestamp']
+    ET.SubElement(snapshot, 'timestamp').text = latest_snapshot_metadata['timestamp'].strftime(
+        SNAPSHOT_FILE_TIMESTAMP
+    )
     ET.SubElement(snapshot, 'buildNumber').text = str(latest_snapshot_metadata['build_number'])
 
     ET.SubElement(versioning, 'lastUpdated').text = generate_last_updated()
@@ -188,9 +193,13 @@ def generate_snapshot_listing_metadata(bucket_name, pom_files_keys):
         snapshot_version = ET.SubElement(snapshot_versions, 'snapshotVersion')
         ET.SubElement(snapshot_version, 'extension').text = metadata['extension']
         ET.SubElement(snapshot_version, 'value').text = '{}-{}-{}'.format(
-            metadata['version'], metadata['timestamp'], metadata['build_number']
+            metadata['version'],
+            metadata['timestamp'].strftime(SNAPSHOT_FILE_TIMESTAMP),
+            metadata['build_number']
         )
-        ET.SubElement(snapshot_version, 'updated').text = ''.join(metadata['timestamp'].split('.'))
+        ET.SubElement(snapshot_version, 'updated').text = metadata['timestamp'].strftime(
+            POM_TIMESTAMP
+        )
 
     return _convert_xml_root_to_string(root)
 
@@ -227,7 +236,8 @@ def _fetch_extension_from_pom_file_content(bucket_name, pom_key):
 
 
 def _extract_timestamp_from_file_name(file_name):
-    return file_name.split('-')[-2]
+    timestamp = file_name.split('-')[-2]
+    return datetime.strptime(timestamp, SNAPSHOT_FILE_TIMESTAMP)
 
 
 def _extract_version_from_file_name(file_name):
@@ -241,7 +251,7 @@ def generate_versions(folder_content_keys):
 
 
 def generate_last_updated():
-    return datetime.utcnow().strftime('%Y%m%d%H%M%S')
+    return datetime.utcnow().strftime(POM_TIMESTAMP)
 
 
 def get_latest_version(versions, exclude_snapshots=False):

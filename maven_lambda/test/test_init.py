@@ -1,5 +1,6 @@
 import pytest
 
+from datetime import datetime
 from freezegun import freeze_time
 from unittest.mock import MagicMock, call
 
@@ -213,12 +214,12 @@ def test_generate_snapshot_listing_metadata(monkeypatch):
     monkeypatch.setattr('maven_lambda.get_snapshots_metadata', lambda _, __: [{
         'build_number': 1,
         'extension': 'aar',
-        'timestamp': '20181029.154529',
+        'timestamp': datetime(2018, 10, 29, 15, 45, 29),
         'version': '0.30.0',
     }, {
         'build_number': 2,
         'extension': 'aar',
-        'timestamp': '20181030.164630',
+        'timestamp': datetime(2018, 10, 30, 16, 46, 30),
         'version': '0.30.0',
     }])
     assert generate_snapshot_listing_metadata('some_bucket_name', [
@@ -259,12 +260,12 @@ def test_get_snapshots_metadata(monkeypatch):
     ]) == [{
         'build_number': 2,
         'extension': 'aar',
-        'timestamp': '20181030.164630',
+        'timestamp': datetime(2018, 10, 30, 16, 46, 30),
         'version': '0.30.0',
     }, {
         'build_number': 1,
         'extension': 'aar',
-        'timestamp': '20181029.154529',
+        'timestamp': datetime(2018, 10, 29, 15, 45, 29),
         'version': '0.30.0',
     }]
 
