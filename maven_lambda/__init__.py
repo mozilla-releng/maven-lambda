@@ -270,4 +270,4 @@ def generate_checksums(data):
 
 
 def is_snapshot(key):
-    return '-SNAPSHOT/' in key
+    return '-SNAPSHOT' in key
