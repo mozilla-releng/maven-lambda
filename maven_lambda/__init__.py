@@ -2,11 +2,13 @@
 import boto3
 import hashlib
 import io
+import os
+import tempfile
 import urllib.parse
 
 from datetime import datetime
-from distutils.version import StrictVersion
 from functools import reduce
+from mozilla_version.maven import MavenVersion
 from xml.etree import cElementTree as ET
 
 
@@ -16,6 +18,11 @@ print('Loading function')
 s3 = boto3.resource('s3')
 
 METADATA_BASE_FILE_NAME = 'maven-metadata.xml'
+
+ET.register_namespace('', 'http://maven.apache.org/POM/4.0.0')
+XML_NAMESPACES = {
+    'm': 'http://maven.apache.org/POM/4.0.0',
+}
 
 
 def lambda_handler(event, context):
@@ -29,34 +36,45 @@ def lambda_handler(event, context):
     bucket = s3.Bucket(bucket_name)
 
     try:
-        folder = get_folder_key(key)
-        print('Extracted folder "{}" from key'.format(folder))
-        folder_content_keys = list_pom_files_in_subfolders(bucket, folder)
-        print('Found .pom files: {}'.format(folder_content_keys))
-        metadata = generate_release_maven_metadata(folder_content_keys)
-        print('Generated maven-metadata content: {}'.format(metadata))
-        upload_s3_file(
-            bucket_name, folder, METADATA_BASE_FILE_NAME, metadata, content_type='text/xml'
+        artifact_folder = get_artifact_folder(key)
+        print('Extracted artifact folder "{}" from key'.format(artifact_folder))
+        poms_in_artifact_folder = list_pom_files_in_subfolders(bucket, artifact_folder)
+        print('Found .pom in artifact folder (and subfolders): {}'.format(poms_in_artifact_folder))
+        craft_and_upload_maven_metadata(
+            bucket, artifact_folder, poms_in_artifact_folder,
+            metadata_function=generate_release_maven_metadata
         )
-        print('Uploaded new maven-metadata.xml')
 
-        checksums = generate_checksums(metadata)
-        print('New maven-metadata.xml checksums: {}'.format(checksums))
-        for type_, sum_ in checksums.items():
-            upload_s3_file(
-                bucket_name, folder, '{}.{}'.format(METADATA_BASE_FILE_NAME, type_), sum_
+        if is_snapshot(key):
+            version_folder = get_version_folder(key)
+            print('Extracted version folder "{}" from key'.format(version_folder))
+            poms_in_version_folder = [
+                key for key in poms_in_artifact_folder
+                if key.startswith(version_folder)
+            ]
+            print('.pom in version folder: {}'.format(poms_in_version_folder))
+            craft_and_upload_maven_metadata(
+                bucket, version_folder, poms_in_version_folder,
+                metadata_function=generate_snapshot_listing_metadata
             )
-            print('Uploaded new {} checksum file'.format(type_))
 
     except Exception as e:
         print(e)
         raise
 
-    print('Done processing folder "{}"'.format(folder))
+    print('Done processing folder "{}"'.format(artifact_folder))
 
 
-def get_folder_key(key):
-    split_path_without_last_two_items = key.split('/')[:-2]
+def get_artifact_folder(key):
+    return _take_items_out_of_path(key, number_of_items=2)
+
+
+def get_version_folder(key):
+    return _take_items_out_of_path(key, number_of_items=1)
+
+
+def _take_items_out_of_path(key, number_of_items):
+    split_path_without_last_two_items = key.split('/')[:-number_of_items]
     folder = '/'.join(split_path_without_last_two_items)
     folder_with_trailing_slash = '{}/'.format(folder)
     return folder_with_trailing_slash
@@ -87,19 +105,36 @@ def get_version(key):
     return key.split('/')[-2]
 
 
-def generate_release_maven_metadata(folder_content_keys):
-    first_listed_version_key = folder_content_keys[0]
-    all_versions = generate_versions(folder_content_keys)
-    latest_version = get_latest_version(all_versions)
+def craft_and_upload_maven_metadata(bucket, folder, pom_files, metadata_function):
+    bucket_name = bucket.name
+    metadata = metadata_function(bucket_name, pom_files)
+    print('Generated maven-metadata content: {}'.format(metadata))
+    upload_s3_file(
+        bucket_name, folder, METADATA_BASE_FILE_NAME, metadata, content_type='text/xml'
+    )
+    print('Uploaded new maven-metadata.xml')
 
-    root = ET.Element('metadata')
-    ET.SubElement(root, 'groupId').text = get_group_id(first_listed_version_key)
-    ET.SubElement(root, 'artifactId').text = get_artifact_id(first_listed_version_key)
+    checksums = generate_checksums(metadata)
+    print('New maven-metadata.xml checksums: {}'.format(checksums))
+    for type_, sum_ in checksums.items():
+        upload_s3_file(
+            bucket_name, folder, '{}.{}'.format(METADATA_BASE_FILE_NAME, type_), sum_
+        )
+        print('Uploaded new {} checksum file'.format(type_))
+
+
+def generate_release_maven_metadata(_, folder_content_keys):
+    all_versions = generate_versions(folder_content_keys)
+    latest_version = get_latest_version(all_versions, exclude_snapshots=False)
+    latest_non_snapshot_version = get_latest_version(all_versions, exclude_snapshots=True)
+
+    root = _generate_xml_root_of_common_maven_metadata(folder_content_keys)
 
     versioning = ET.SubElement(root, 'versioning')
 
     ET.SubElement(versioning, 'latest').text = latest_version
-    ET.SubElement(versioning, 'release').text = latest_version
+    ET.SubElement(versioning, 'release').text = '' if latest_non_snapshot_version is None \
+        else latest_non_snapshot_version
 
     versions = ET.SubElement(versioning, 'versions')
 
@@ -108,12 +143,95 @@ def generate_release_maven_metadata(folder_content_keys):
 
     ET.SubElement(versioning, 'lastUpdated').text = generate_last_updated()
 
+    return _convert_xml_root_to_string(root)
+
+
+def _generate_xml_root_of_common_maven_metadata(folder_content_keys):
+    first_listed_version_key = folder_content_keys[0]
+
+    root = ET.Element('metadata')
+    ET.SubElement(root, 'groupId').text = get_group_id(first_listed_version_key)
+    ET.SubElement(root, 'artifactId').text = get_artifact_id(first_listed_version_key)
+
+    return root
+
+
+def _convert_xml_root_to_string(root):
     # XXX ET.tostring() strips the xml_declaration out if using encoding='unicode'
     stream = io.StringIO()
     ET.ElementTree(root).write(
-        stream, encoding='unicode', xml_declaration=True, method='xml', short_empty_elements=True
+        stream, encoding='unicode', xml_declaration=True, method='xml', short_empty_elements=False
     )
     return stream.getvalue()
+
+
+def generate_snapshot_listing_metadata(bucket_name, pom_files_keys):
+    snapshots_metadata = get_snapshots_metadata(bucket_name, pom_files_keys)
+    sorted_snapshot_metadata = sorted(
+        snapshots_metadata, key=lambda x: x['build_number'], reverse=True
+    )
+    latest_snapshot_metadata = sorted_snapshot_metadata[0]
+
+    root = _generate_xml_root_of_common_maven_metadata(pom_files_keys)
+    ET.SubElement(root, 'version').text = get_version(pom_files_keys[0])
+
+    versioning = ET.SubElement(root, 'versioning')
+    snapshot = ET.SubElement(versioning, 'snapshot')
+    ET.SubElement(snapshot, 'timestamp').text = latest_snapshot_metadata['timestamp']
+    ET.SubElement(snapshot, 'buildNumber').text = str(latest_snapshot_metadata['build_number'])
+
+    ET.SubElement(versioning, 'lastUpdated').text = generate_last_updated()
+
+    snapshot_versions = ET.SubElement(versioning, 'snapshotVersions')
+
+    for metadata in sorted_snapshot_metadata:
+        snapshot_version = ET.SubElement(snapshot_versions, 'snapshotVersion')
+        ET.SubElement(snapshot_version, 'extension').text = metadata['extension']
+        ET.SubElement(snapshot_version, 'value').text = '{}-{}-{}'.format(
+            metadata['version'], metadata['timestamp'], metadata['build_number']
+        )
+        ET.SubElement(snapshot_version, 'updated').text = ''.join(metadata['timestamp'].split('.'))
+
+    return _convert_xml_root_to_string(root)
+
+
+def get_snapshots_metadata(bucket_name, all_snapshot_pom_keys):
+    pom_keys_and_file_names = [
+        (key, key.split('/')[-1])
+        for key in all_snapshot_pom_keys
+    ]
+
+    return [{
+        'build_number': _extract_build_number_from_file_name(file_name),
+        'extension': _fetch_extension_from_pom_file_content(bucket_name, key),
+        'timestamp': _extract_timestamp_from_file_name(file_name),
+        'version': _extract_version_from_file_name(file_name),
+    } for key, file_name in pom_keys_and_file_names]
+
+
+def _extract_build_number_from_file_name(file_name):
+    file_name_without_extension = file_name.rstrip('.pom')
+    build_number = file_name_without_extension.split('-')[-1]
+    return int(build_number)
+
+
+def _fetch_extension_from_pom_file_content(bucket_name, pom_key):
+    with tempfile.TemporaryDirectory() as d:
+        temporary_pom_path = os.path.join(d, 'pom.xml')
+        s3.Bucket(bucket_name).download_file(pom_key, temporary_pom_path)
+        tree = ET.parse(temporary_pom_path)
+
+    root = tree.getroot()
+    packaging_element = root.find('m:packaging', XML_NAMESPACES)
+    return packaging_element.text
+
+
+def _extract_timestamp_from_file_name(file_name):
+    return file_name.split('-')[-2]
+
+
+def _extract_version_from_file_name(file_name):
+    return file_name.split('-')[-3]
 
 
 def generate_versions(folder_content_keys):
@@ -126,10 +244,14 @@ def generate_last_updated():
     return datetime.utcnow().strftime('%Y%m%d%H%M%S')
 
 
-def get_latest_version(versions):
-    strict_versions = [StrictVersion(version) for version in versions]
-    latest_strict_version = reduce(lambda x, y: x if x >= y else y, strict_versions)
-    return str(latest_strict_version)
+def get_latest_version(versions, exclude_snapshots=False):
+    maven_versions = [MavenVersion.parse(version) for version in versions]
+    if exclude_snapshots:
+        maven_versions = [version for version in maven_versions if not version.is_snapshot]
+    if not maven_versions:
+        return None
+    latest_version = reduce(lambda x, y: x if x >= y else y, maven_versions)
+    return str(latest_version)
 
 
 def upload_s3_file(bucket_name, folder, file_name, data, content_type='text/plain'):
@@ -145,3 +267,7 @@ def generate_checksums(data):
         'md5': hashlib.md5(data).hexdigest(),
         'sha1': hashlib.sha1(data).hexdigest(),
     }
+
+
+def is_snapshot(key):
+    return '-SNAPSHOT' in key
