@@ -56,11 +56,11 @@ tasks:
                 && git config advice.detachedHead false
                 && git checkout ${head_rev}
                 ${partial_command}
-          artifacts:
-            ${uploaded_artifact_path}:
-              expires: ${expires_in}
-              path: ${local_artifact_path}
-              type: file
+            artifacts:
+              ${uploaded_artifact_path}:
+                expires: ${expires_in}
+                path: ${local_artifact_path}
+                type: file
           metadata:
             name: 'maven-lambda - Build and test (Pull Request #${pull_request_number})'
             description: 'Testing and building maven-lambda - triggered by [#${pull_request_number}](${pull_request_url})'
@@ -93,11 +93,11 @@ tasks:
                 && git config advice.detachedHead false
                 && git checkout ${head_rev}
                 ${partial_command}
-          artifacts:
-            ${uploaded_artifact_path}:
-              expires: ${expires_in}
-              path: ${local_artifact_path}
-              type: file
+            artifacts:
+              ${uploaded_artifact_path}:
+                expires: ${expires_in}
+                path: ${local_artifact_path}
+                type: file
           metadata:
             name: 'maven-lambda - Build and test (Pull Request #${pull_request_number})'
             description: 'Testing and building maven-lambda - triggered by [${head_rev}](${compare_url})'
