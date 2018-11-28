@@ -44,7 +44,7 @@ tasks:
           workerType: ${worker_type}
           scopes: []
           payload:
-            maxRunTime: ${max_run_time_in_seconds}
+            maxRunTime: {$eval: max_run_time_in_seconds}
             image: ${docker_image}
             command:
               - /bin/bash
@@ -81,7 +81,7 @@ tasks:
           workerType: ${worker_type}
           scopes: []
           payload:
-            maxRunTime: ${max_run_time_in_seconds}
+            maxRunTime: {$eval: max_run_time_in_seconds}
             image: ${docker_image}
             command:
               - /bin/bash
