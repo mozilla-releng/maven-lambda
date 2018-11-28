@@ -19,6 +19,8 @@ tasks:
     local_artifact_path: /artifacts/function.zip
     uploaded_artifact_path: public/build/function.zip
     partial_command: >-
+      && apt update
+      && apt install --yes zip
       && pip install --requirement requirements.txt
       && mkdir /artifacts
       && cd /usr/local/lib/python3.6/site-packages/
