@@ -25,8 +25,9 @@ tasks:
       && mkdir /artifacts
       && cd /usr/local/lib/python3.6/site-packages/
       && zip -r9 /artifacts/function.zip .
-      && cd /work_dir
-      && zip -g /artifacts/function.zip maven_lambda/*.py
+      && cd /work_dir/maven_lambda/
+      && zip -g /artifacts/function.zip *.py
+      && cd /work_dir/
       && pip install tox
       && tox -e py36
   in:
