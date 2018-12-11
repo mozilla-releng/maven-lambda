@@ -72,7 +72,7 @@ tasks:
     - $if: 'tasks_for == "github-push" && event["ref"] == "refs/heads/master"'
       then:
         $let:
-          head_branch: ${event.ref}
+          head_branch: ${event["ref"][11:]}  # Stripping out "refs/heads/" so `git clone` gets expected branch
           head_rev: ${event.after}
           repository: ${event.repository.clone_url}
           compare_url: ${event.compare}
