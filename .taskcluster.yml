@@ -1,0 +1,108 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+version: 1
+policy:
+  pullRequests: collaborators
+tasks:
+  $let:
+    created_on: {$fromNow: ''}
+    deadline_in: {$fromNow: '2 hours'}
+    expires_in: {$fromNow: '1 year'}
+    provisioner_id: aws-provisioner-v1
+    worker_type: github-worker
+    max_run_time_in_seconds: 1800
+    docker_image: python:3.6  # AWS Lambda supports this version only
+    task_owner: ${event.sender.login}@users.noreply.github.com
+
+    local_artifact_path: /artifacts/function.zip
+    uploaded_artifact_path: public/build/function.zip
+    partial_command: >-
+      && apt update
+      && apt install --yes zip
+      && pip install --requirement requirements.txt
+      && mkdir /artifacts
+      && cd /usr/local/lib/python3.6/site-packages/
+      && zip -r9 /artifacts/function.zip .
+      && cd /work_dir/maven_lambda/
+      && zip -g /artifacts/function.zip *.py
+      && cd /work_dir/
+      && pip install tox
+      && tox -e py36
+  in:
+    - $if: 'tasks_for == "github-pull-request" && event["action"] in ["opened", "reopened", "edited", "synchronize"]'
+      then:
+        $let:
+          head_branch: ${event.pull_request.head.ref}
+          head_rev: ${event.pull_request.head.sha}
+          repository: ${event.pull_request.head.repo.clone_url}
+          pull_request_number: ${event.pull_request.number}
+          pull_request_url: ${event.pull_request.html_url}
+        in:
+          created: ${created_on}
+          deadline: ${deadline_in}
+          expires: ${expires_in}
+          provisionerId: ${provisioner_id}
+          workerType: ${worker_type}
+          scopes: []
+          payload:
+            maxRunTime: {$eval: max_run_time_in_seconds}
+            image: ${docker_image}
+            command:
+              - /bin/bash
+              - --login
+              - -cx
+              - >-
+                git clone --branch ${head_branch} ${repository} /work_dir
+                && cd /work_dir
+                && git config advice.detachedHead false
+                && git checkout ${head_rev}
+                ${partial_command}
+            artifacts:
+              ${uploaded_artifact_path}:
+                expires: ${expires_in}
+                path: ${local_artifact_path}
+                type: file
+          metadata:
+            name: 'maven-lambda - Build and test (Pull Request #${pull_request_number})'
+            description: 'Testing and building maven-lambda - triggered by [#${pull_request_number}](${pull_request_url})'
+            owner: ${task_owner}
+            source: ${repository}/raw/${head_rev}/.taskcluster.yml
+    - $if: 'tasks_for == "github-push" && event["ref"] == "refs/heads/master"'
+      then:
+        $let:
+          head_branch: ${event.ref}
+          head_rev: ${event.after}
+          repository: ${event.repository.clone_url}
+          compare_url: ${event.compare}
+        in:
+          created: ${created_on}
+          deadline: ${deadline_in}
+          expires: ${expires_in}
+          provisionerId: ${provisioner_id}
+          workerType: ${worker_type}
+          scopes: []
+          payload:
+            maxRunTime: {$eval: max_run_time_in_seconds}
+            image: ${docker_image}
+            command:
+              - /bin/bash
+              - --login
+              - -cx
+              - >-
+                git clone --branch ${head_branch} ${repository} /work_dir
+                && cd /work_dir
+                && git config advice.detachedHead false
+                && git checkout ${head_rev}
+                ${partial_command}
+            artifacts:
+              ${uploaded_artifact_path}:
+                expires: ${expires_in}
+                path: ${local_artifact_path}
+                type: file
+          metadata:
+            name: 'maven-lambda - Build and test (master branch)'
+            description: 'Testing and building maven-lambda - triggered by [${head_rev}](${compare_url})'
+            owner: ${task_owner}
+            source: ${repository}/raw/${head_rev}/.taskcluster.yml
