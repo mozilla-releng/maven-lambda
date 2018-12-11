@@ -69,7 +69,7 @@ tasks:
             description: 'Testing and building maven-lambda - triggered by [#${pull_request_number}](${pull_request_url})'
             owner: ${task_owner}
             source: ${repository}/raw/${head_rev}/.taskcluster.yml
-    - $if: 'tasks_for == "github-push" && event.ref == "refs/heads/master"'
+    - $if: 'tasks_for == "github-push" && event["ref"] == "refs/heads/master"'
       then:
         $let:
           head_branch: ${event.ref}
