@@ -4,6 +4,7 @@ import hashlib
 import io
 import os
 import tempfile
+import time
 import urllib.parse
 
 from datetime import datetime
@@ -16,6 +17,7 @@ from xml.etree import cElementTree as ET
 print('Loading function')
 
 s3 = boto3.resource('s3')
+cloudfront = boto3.client('cloudfront')
 
 METADATA_BASE_FILE_NAME = 'maven-metadata.xml'
 
@@ -267,7 +269,25 @@ def get_latest_version(versions, exclude_snapshots=False):
 def upload_s3_file(bucket_name, folder, file_name, data, content_type='text/plain'):
     folder = folder.rstrip('/')
     key = '{}/{}'.format(folder, file_name)
-    return s3.Object(bucket_name, key).put(Body=data, ContentType=content_type)
+    s3.Object(bucket_name, key).put(Body=data, ContentType=content_type)
+    invalidate_cloudfront(path=key)
+
+
+def invalidate_cloudfront(path):
+    distribution_id = os.environ.get('CLOUDFRONT_DISTRIBUTION_ID', None)
+    if distribution_id:
+        cloudfront.create_invalidation(
+            DistributionId=distribution_id,
+            InvalidationBatch={
+                'Paths': {
+                    'Quantity': 1,
+                    'Items': [
+                        path,
+                    ],
+                },
+                'CallerReference': str(int(time.time())),
+            }
+        )
 
 
 def generate_checksums(data):
