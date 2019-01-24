@@ -19,6 +19,7 @@ from maven_lambda import (
     get_version,
     get_version_folder,
     is_snapshot,
+    invalidate_cloudfront,
     lambda_handler,
     list_pom_files_in_subfolders,
     upload_s3_file,
@@ -357,13 +358,41 @@ def test_upload_s3_file(monkeypatch):
     s3_mock = MagicMock()
     object_mock = MagicMock()
     s3_mock.Object.return_value = object_mock
+    invalidate_cloudfront_mock = MagicMock()
     monkeypatch.setattr('maven_lambda.s3', s3_mock)
+    monkeypatch.setattr('maven_lambda.invalidate_cloudfront', invalidate_cloudfront_mock)
     upload_s3_file(
         'some_bucket', 'some/folder/', 'some_file', 'some data', content_type='some/content-type'
     )
 
     s3_mock.Object.assert_called_once_with('some_bucket', 'some/folder/some_file')
     object_mock.put.assert_called_once_with(Body='some data', ContentType='some/content-type')
+    invalidate_cloudfront_mock.assert_called_once_with(path='some/folder/some_file')
+
+
+@freeze_time('2018-10-29 16:00:30')
+@pytest.mark.parametrize('cloudfront_distribution_id', (None, 'some-id'))
+def test_invalidate_cloudfront(monkeypatch, cloudfront_distribution_id):
+    cloudfront_mock = MagicMock()
+    monkeypatch.setattr('maven_lambda.cloudfront', cloudfront_mock)
+    monkeypatch.setattr('os.environ.get', lambda _, __: cloudfront_distribution_id)
+    invalidate_cloudfront('some/folder/some_file')
+
+    if cloudfront_distribution_id:
+        cloudfront_mock.create_invalidation.assert_called_once_with(
+            DistributionId='some-id',
+            InvalidationBatch={
+                'Paths': {
+                    'Quantity': 1,
+                    'Items': [
+                        'some/folder/some_file',
+                    ],
+                },
+                'CallerReference': str('1540828830'),
+            }
+        )
+    else:
+        cloudfront_mock.create_invalidation.assert_not_called()
 
 
 @pytest.mark.parametrize('data', (
