@@ -4,7 +4,7 @@ from datetime import datetime
 from freezegun import freeze_time
 from unittest.mock import MagicMock, call
 
-from maven_lambda import (
+from maven_lambda.metadata import (
     craft_and_upload_maven_metadata,
     generate_checksums,
     generate_last_updated,
@@ -42,18 +42,18 @@ def test_lambda_handler(monkeypatch):
     }
     context = {}
     s3_mock = MagicMock()
-    monkeypatch.setattr('maven_lambda.s3', s3_mock)
-    monkeypatch.setattr('maven_lambda.list_pom_files_in_subfolders', lambda _, __: [
+    monkeypatch.setattr('maven_lambda.metadata.s3', s3_mock)
+    monkeypatch.setattr('maven_lambda.metadata.list_pom_files_in_subfolders', lambda _, __: [
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',
     ])
-    monkeypatch.setattr('maven_lambda.craft_and_upload_maven_metadata', lambda _, __, ___, metadata_function=None: None)
+    monkeypatch.setattr('maven_lambda.metadata.craft_and_upload_maven_metadata', lambda _, __, ___, metadata_function=None: None)
 
     lambda_handler(event, context)
     s3_mock.Bucket.assert_called_once_with('some_bucket_name')
 
     def fail(_, __):
         raise ConnectionError()
-    monkeypatch.setattr('maven_lambda.list_pom_files_in_subfolders', fail)
+    monkeypatch.setattr('maven_lambda.metadata.list_pom_files_in_subfolders', fail)
     with pytest.raises(ConnectionError):
         lambda_handler(event, context)
 
@@ -139,7 +139,7 @@ def test_craft_and_upload_maven_metadata(monkeypatch):
     metadata_function_mock.return_value = '<some>metadata-data</some>'
 
     upload_s3_file_mock = MagicMock()
-    monkeypatch.setattr('maven_lambda.upload_s3_file', upload_s3_file_mock)
+    monkeypatch.setattr('maven_lambda.metadata.upload_s3_file', upload_s3_file_mock)
 
     craft_and_upload_maven_metadata(
         bucket_mock,
@@ -212,7 +212,7 @@ def test_generate_release_maven_metadata():
 
 @freeze_time('2018-10-31 16:00:30')
 def test_generate_snapshot_listing_metadata(monkeypatch):
-    monkeypatch.setattr('maven_lambda.get_snapshots_metadata', lambda _, __: [{
+    monkeypatch.setattr('maven_lambda.metadata.get_snapshots_metadata', lambda _, __: [{
         'build_number': 1,
         'extension': 'aar',
         'timestamp': datetime(2018, 10, 29, 15, 45, 29),
@@ -254,7 +254,7 @@ def test_generate_snapshot_listing_metadata(monkeypatch):
 
 
 def test_get_snapshots_metadata(monkeypatch):
-    monkeypatch.setattr('maven_lambda._fetch_extension_from_pom_file_content', lambda _, __: 'aar')
+    monkeypatch.setattr('maven_lambda.metadata._fetch_extension_from_pom_file_content', lambda _, __: 'aar')
     assert get_snapshots_metadata('some_bucket_name', [
         'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',
         'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom',
@@ -285,7 +285,7 @@ def test_fetch_extension_from_pom_file_content(monkeypatch):
 
     bucket_mock.download_file.side_effect = fake_download
 
-    monkeypatch.setattr('maven_lambda.s3', s3_mock)
+    monkeypatch.setattr('maven_lambda.metadata.s3', s3_mock)
 
     assert _fetch_extension_from_pom_file_content('some_bucket_name',
         'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',
@@ -359,8 +359,8 @@ def test_upload_s3_file(monkeypatch):
     object_mock = MagicMock()
     s3_mock.Object.return_value = object_mock
     invalidate_cloudfront_mock = MagicMock()
-    monkeypatch.setattr('maven_lambda.s3', s3_mock)
-    monkeypatch.setattr('maven_lambda.invalidate_cloudfront', invalidate_cloudfront_mock)
+    monkeypatch.setattr('maven_lambda.metadata.s3', s3_mock)
+    monkeypatch.setattr('maven_lambda.metadata.invalidate_cloudfront', invalidate_cloudfront_mock)
     upload_s3_file(
         'some_bucket', 'some/folder/', 'some_file', 'some data', content_type='some/content-type'
     )
@@ -374,7 +374,7 @@ def test_upload_s3_file(monkeypatch):
 @pytest.mark.parametrize('cloudfront_distribution_id', (None, 'some-id'))
 def test_invalidate_cloudfront(monkeypatch, cloudfront_distribution_id):
     cloudfront_mock = MagicMock()
-    monkeypatch.setattr('maven_lambda.cloudfront', cloudfront_mock)
+    monkeypatch.setattr('maven_lambda.metadata.cloudfront', cloudfront_mock)
     monkeypatch.setattr('os.environ.get', lambda _, __: cloudfront_distribution_id)
     invalidate_cloudfront('some/folder/some_file')
 

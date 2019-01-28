@@ -3,7 +3,9 @@ import pytest
 from freezegun import freeze_time
 from unittest.mock import MagicMock, call
 
-from maven_lambda import lambda_handler
+from maven_lambda.metadata import lambda_handler as metadata_lambda_handler
+import maven_lambda.copy
+from maven_lambda.copy import lambda_handler as copy_lambda_handler
 
 
 @freeze_time('2018-10-29 16:00:30')
@@ -167,7 +169,7 @@ from maven_lambda import lambda_handler
         },
     },
 )))
-def test_lambda_handler(monkeypatch, inserted_key, bucket_keys, expected_prefix, expected_metadata):
+def test_metadata_lambda_handler(monkeypatch, inserted_key, bucket_keys, expected_prefix, expected_metadata):
     event = {
         'Records': [{
             's3': {
@@ -200,9 +202,9 @@ def test_lambda_handler(monkeypatch, inserted_key, bucket_keys, expected_prefix,
     object_mock = MagicMock()
     s3_mock.Object.return_value = object_mock
 
-    monkeypatch.setattr('maven_lambda.s3', s3_mock)
+    monkeypatch.setattr('maven_lambda.metadata.s3', s3_mock)
 
-    lambda_handler(event, context)
+    metadata_lambda_handler(event, context)
 
     bucket_mock.objects.filter.assert_called_once_with(Prefix=expected_prefix)
 
@@ -217,3 +219,57 @@ def test_lambda_handler(monkeypatch, inserted_key, bucket_keys, expected_prefix,
     expected_call_count = len(expected_metadata) * 3
     assert s3_mock.Object.call_count == expected_call_count
     assert object_mock.put.call_count == expected_call_count
+
+@pytest.fixture
+def s3_event():
+    return {
+        "Records": [{
+            "s3": {
+                "bucket": {"name": "source_bucket"},
+                "object": {"key": "object_key"},
+            }
+        }]
+    }
+
+def test_copy_lambda_handler_not_found(s3_event):
+    import os
+    os.environ["TARGET_BUCKET"] = target_bucket = 'foo'
+    import boto3
+    s3 = MagicMock()
+    boto3.client = MagicMock(return_value=s3)
+    def f(*args):
+        raise maven_lambda.copy.NotFound()
+    maven_lambda.copy.s3_object_has_more_than_one_version = f
+    assert copy_lambda_handler(s3_event, {}) == {"statusCode": 404}
+
+    
+def test_copy_lambda_handler_conflict(s3_event):
+    import os
+    os.environ["TARGET_BUCKET"] = target_bucket = 'foo'
+    import boto3
+    s3 = MagicMock()
+    boto3.client = MagicMock(return_value=s3)
+    def f(*args):
+        return True
+    maven_lambda.copy.s3_object_has_more_than_one_version = f
+    assert copy_lambda_handler(s3_event, {}) == {"statusCode": 409}
+
+def test_copy_lambda_handler_conflict(s3_event):
+    import os
+    os.environ["TARGET_BUCKET"] = target_bucket = 'foo'
+    import boto3
+    s3 = MagicMock()
+    boto3.client = MagicMock(return_value=s3)
+    def f(*args):
+        return False
+    maven_lambda.copy.s3_object_has_more_than_one_version = f
+    assert copy_lambda_handler(s3_event, {}) == {"statusCode": 200}
+    s3.copy_object.assert_called_once_with(
+        Bucket=target_bucket,
+        CopySource={
+            "Bucket": "source_bucket",
+            "Key": "object_key",
+        },
+        Key="object_key",
+    )
+
