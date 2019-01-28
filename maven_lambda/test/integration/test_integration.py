@@ -3,7 +3,7 @@ import pytest
 from freezegun import freeze_time
 from unittest.mock import MagicMock, call
 
-from maven_lambda import lambda_handler
+from maven_lambda.metadata import lambda_handler
 
 
 @freeze_time('2018-10-29 16:00:30')
@@ -200,7 +200,7 @@ def test_lambda_handler(monkeypatch, inserted_key, bucket_keys, expected_prefix,
     object_mock = MagicMock()
     s3_mock.Object.return_value = object_mock
 
-    monkeypatch.setattr('maven_lambda.s3', s3_mock)
+    monkeypatch.setattr('maven_lambda.metadata.s3', s3_mock)
 
     lambda_handler(event, context)
 
