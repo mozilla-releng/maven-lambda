@@ -6,10 +6,8 @@ class NotFound(Exception):
     pass
 
 
-TARGET_BUCKET = os.environ["TARGET_BUCKET"]
-
-
 def lambda_handler(event, context):
+    TARGET_BUCKET = os.environ["TARGET_BUCKET"]
     s3 = boto3.client("s3")
     s3_event = event["Records"][0]["s3"]
     try:
