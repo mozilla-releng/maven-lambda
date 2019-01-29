@@ -275,6 +275,7 @@ def upload_s3_file(bucket_name, folder, file_name, data, content_type='text/plai
 
 def invalidate_cloudfront(path):
     distribution_id = os.environ.get('CLOUDFRONT_DISTRIBUTION_ID', None)
+    path = path if path.startswith('/') else '/{}'.format(path)
     if distribution_id:
         cloudfront.create_invalidation(
             DistributionId=distribution_id,

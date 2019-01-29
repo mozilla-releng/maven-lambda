@@ -385,7 +385,7 @@ def test_invalidate_cloudfront(monkeypatch, cloudfront_distribution_id):
                 'Paths': {
                     'Quantity': 1,
                     'Items': [
-                        'some/folder/some_file',
+                        '/some/folder/some_file',
                     ],
                 },
                 'CallerReference': str('1540828830'),
