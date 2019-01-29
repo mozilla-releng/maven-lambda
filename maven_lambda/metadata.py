@@ -3,8 +3,8 @@ import boto3
 import hashlib
 import io
 import os
+import slugid
 import tempfile
-import time
 import urllib.parse
 
 from datetime import datetime
@@ -275,8 +275,12 @@ def upload_s3_file(bucket_name, folder, file_name, data, content_type='text/plai
 
 def invalidate_cloudfront(path):
     distribution_id = os.environ.get('CLOUDFRONT_DISTRIBUTION_ID', None)
-    path = path if path.startswith('/') else '/{}'.format(path)
+
     if distribution_id:
+        path = path if path.startswith('/') else '/{}'.format(path)
+        request_id = slugid.nice().decode('utf-8')  # nice() returns bytes by default
+
+        # TODO retry this call
         cloudfront.create_invalidation(
             DistributionId=distribution_id,
             InvalidationBatch={
@@ -286,7 +290,7 @@ def invalidate_cloudfront(path):
                         path,
                     ],
                 },
-                'CallerReference': str(int(time.time())),
+                'CallerReference': request_id,
             }
         )
 

@@ -370,12 +370,13 @@ def test_upload_s3_file(monkeypatch):
     invalidate_cloudfront_mock.assert_called_once_with(path='some/folder/some_file')
 
 
-@freeze_time('2018-10-29 16:00:30')
 @pytest.mark.parametrize('cloudfront_distribution_id', (None, 'some-id'))
 def test_invalidate_cloudfront(monkeypatch, cloudfront_distribution_id):
     cloudfront_mock = MagicMock()
     monkeypatch.setattr('maven_lambda.metadata.cloudfront', cloudfront_mock)
     monkeypatch.setattr('os.environ.get', lambda _, __: cloudfront_distribution_id)
+    monkeypatch.setattr('slugid.nice', lambda: b'some_-Known_-_Slug--Id')
+
     invalidate_cloudfront('some/folder/some_file')
 
     if cloudfront_distribution_id:
@@ -388,7 +389,7 @@ def test_invalidate_cloudfront(monkeypatch, cloudfront_distribution_id):
                         '/some/folder/some_file',
                     ],
                 },
-                'CallerReference': str('1540828830'),
+                'CallerReference': 'some_-Known_-_Slug--Id',
             }
         )
     else:
