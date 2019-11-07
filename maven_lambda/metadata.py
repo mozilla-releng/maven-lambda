@@ -10,6 +10,7 @@ import urllib.parse
 from datetime import datetime
 from functools import reduce
 from mozilla_version.maven import MavenVersion
+from mozilla_version.errors import PatternNotMatchedError
 from xml.etree import cElementTree as ET
 
 
@@ -129,9 +130,9 @@ def craft_and_upload_maven_metadata(bucket, folder, pom_files, metadata_function
 
 
 def generate_release_maven_metadata(_, folder_content_keys):
-    all_versions = generate_versions(folder_content_keys)
-    latest_version = get_latest_version(all_versions, exclude_snapshots=False)
-    latest_non_snapshot_version = get_latest_version(all_versions, exclude_snapshots=True)
+    versions_per_path = generate_versions(folder_content_keys)
+    latest_version = get_latest_version(versions_per_path, exclude_snapshots=False)
+    latest_non_snapshot_version = get_latest_version(versions_per_path, exclude_snapshots=True)
 
     root = _generate_xml_root_of_common_maven_metadata(folder_content_keys)
 
@@ -143,7 +144,7 @@ def generate_release_maven_metadata(_, folder_content_keys):
 
     versions = ET.SubElement(versioning, 'versions')
 
-    for version in all_versions:
+    for version in sorted(set(versions_per_path.values())):
         ET.SubElement(versions, 'version').text = version
 
     ET.SubElement(versioning, 'lastUpdated').text = generate_last_updated()
@@ -247,17 +248,25 @@ def _extract_version_from_file_name(file_name):
 
 
 def generate_versions(folder_content_keys):
-    return sorted(list(set([
-        get_version(key) for key in folder_content_keys if key
-    ])))
+    return {
+        key: get_version(key) for key in folder_content_keys if key
+    }
 
 
 def generate_last_updated():
     return datetime.utcnow().strftime(POM_TIMESTAMP)
 
 
-def get_latest_version(versions, exclude_snapshots=False):
-    maven_versions = [MavenVersion.parse(version) for version in versions]
+def get_latest_version(versions_per_path, exclude_snapshots=False):
+    maven_versions = []
+    for path, version in versions_per_path.items():
+        try:
+            maven_versions.append(MavenVersion.parse(version))
+        except PatternNotMatchedError as error:
+            raise ValueError(
+                '"{}" does not contain a valid version. See root error.'.format(path)
+            ) from error
+
     if exclude_snapshots:
         maven_versions = [version for version in maven_versions if not version.is_snapshot]
     if not maven_versions:
