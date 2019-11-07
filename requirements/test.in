@@ -1,5 +1,5 @@
 # pyup: ignore file
--r requirements.txt.in
+-r base.in
 flake8
 freezegun
 pytest
