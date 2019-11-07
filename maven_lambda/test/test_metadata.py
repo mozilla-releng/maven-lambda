@@ -1,5 +1,6 @@
 import pytest
 
+from botocore.exceptions import ClientError
 from datetime import datetime
 from freezegun import freeze_time
 from unittest.mock import MagicMock, call
@@ -422,6 +423,17 @@ def test_invalidate_cloudfront(monkeypatch, cloudfront_distribution_id):
         )
     else:
         cloudfront_mock.create_invalidation.assert_not_called()
+
+
+def test_invalidate_cloudfront_does_not_bail_out(monkeypatch):
+    cloudfront_mock = MagicMock()
+    monkeypatch.setattr('maven_lambda.metadata.cloudfront', cloudfront_mock)
+    monkeypatch.setattr('os.environ.get', lambda _, __: 'some-id')
+    monkeypatch.setattr('slugid.nice', lambda: b'some_-Known_-_Slug--Id')
+
+    cloudfront_mock.create_invalidation.side_effect = ClientError({}, 'CreateInvalidation')
+
+    invalidate_cloudfront('some/folder/some_file')  # Does not raise
 
 
 @pytest.mark.parametrize('data', (
