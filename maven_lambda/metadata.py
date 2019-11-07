@@ -7,6 +7,7 @@ import slugid
 import tempfile
 import urllib.parse
 
+from botocore.exceptions import ClientError
 from datetime import datetime
 from functools import reduce
 from mozilla_version.maven import MavenVersion
@@ -289,19 +290,21 @@ def invalidate_cloudfront(path):
         path = path if path.startswith('/') else '/{}'.format(path)
         request_id = slugid.nice().decode('utf-8')  # nice() returns bytes by default
 
-        # TODO retry this call
-        cloudfront.create_invalidation(
-            DistributionId=distribution_id,
-            InvalidationBatch={
-                'Paths': {
-                    'Quantity': 1,
-                    'Items': [
-                        path,
-                    ],
-                },
-                'CallerReference': request_id,
-            }
-        )
+        try:
+            cloudfront.create_invalidation(
+                DistributionId=distribution_id,
+                InvalidationBatch={
+                    'Paths': {
+                        'Quantity': 1,
+                        'Items': [
+                            path,
+                        ],
+                    },
+                    'CallerReference': request_id,
+                }
+            )
+        except ClientError as e:
+            print('WARN: Could not invalidate cache. Reason: {}'.format(e))
 
 
 def generate_checksums(data):
