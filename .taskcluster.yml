@@ -21,7 +21,7 @@ tasks:
     partial_command: >-
       && apt update
       && apt install --yes zip
-      && pip install --requirement requirements.txt
+      && pip install --requirement requirements/base.txt
       && mkdir /artifacts
       && cd /usr/local/lib/python3.6/site-packages/
       && zip -r9 /artifacts/function.zip .
