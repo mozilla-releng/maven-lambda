@@ -10,7 +10,7 @@ with open(os.path.join(project_dir, 'version.txt')) as f:
 
 # We use the .in file because a library shouldn't pin versions, it breaks consumers' updates.
 # We allow commented lines in this file
-with open(os.path.join(project_dir, 'requirements.txt.in')) as f:
+with open(os.path.join(project_dir, 'requirements', 'base.in')) as f:
     requirements_raw = f.readlines()
 
 requirements_without_comments = [
