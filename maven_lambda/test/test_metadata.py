@@ -404,7 +404,7 @@ def test_invalidate_cloudfront(monkeypatch, cloudfront_distribution_id):
     cloudfront_mock = MagicMock()
     monkeypatch.setattr('maven_lambda.metadata.cloudfront', cloudfront_mock)
     monkeypatch.setattr('os.environ.get', lambda _, __: cloudfront_distribution_id)
-    monkeypatch.setattr('slugid.nice', lambda: b'some_-Known_-_Slug--Id')
+    monkeypatch.setattr('slugid.nice', lambda: 'some_-Known_-_Slug--Id')
 
     invalidate_cloudfront('some/folder/some_file')
 

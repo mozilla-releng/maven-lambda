@@ -288,7 +288,7 @@ def invalidate_cloudfront(path):
 
     if distribution_id:
         path = path if path.startswith('/') else '/{}'.format(path)
-        request_id = slugid.nice().decode('utf-8')  # nice() returns bytes by default
+        request_id = slugid.nice()
 
         try:
             cloudfront.create_invalidation(
