@@ -9,7 +9,7 @@ from maven_lambda.copy import lambda_handler as copy_lambda_handler
 
 
 @freeze_time('2018-10-29 16:00:30')
-@pytest.mark.parametrize('inserted_key, bucket_keys, expected_prefix, expected_metadata', ((
+@pytest.mark.parametrize('inserted_key, bucket_keys, expected_prefix, expected_metadata, expected_cache_items, expected_cache_quantity', ((
     'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom',
     (
         # Full content of a folder
@@ -87,6 +87,12 @@ from maven_lambda.copy import lambda_handler as copy_lambda_handler
             'xml_key': 'maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml',
         },
     },
+    [
+        '/maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml',
+        '/maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml.md5',
+        '/maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml.sha1',
+    ],
+    3,
 ), (
     'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',
     (
@@ -168,8 +174,17 @@ from maven_lambda.copy import lambda_handler as copy_lambda_handler
             'xml_key': 'maven2/org/mozilla/components/browser-domains/maven-metadata.xml',
         },
     },
+    [
+        '/maven2/org/mozilla/components/browser-domains/maven-metadata.xml',
+        '/maven2/org/mozilla/components/browser-domains/maven-metadata.xml.md5',
+        '/maven2/org/mozilla/components/browser-domains/maven-metadata.xml.sha1',
+        '/maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml',
+        '/maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.md5',
+        '/maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.sha1',
+    ],
+    6,
 )))
-def test_metadata_lambda_handler(monkeypatch, inserted_key, bucket_keys, expected_prefix, expected_metadata):
+def test_metadata_lambda_handler(monkeypatch, inserted_key, bucket_keys, expected_prefix, expected_metadata, expected_cache_items, expected_cache_quantity):
     event = {
         'Records': [{
             's3': {
@@ -204,6 +219,11 @@ def test_metadata_lambda_handler(monkeypatch, inserted_key, bucket_keys, expecte
 
     monkeypatch.setattr('maven_lambda.metadata.s3', s3_mock)
 
+    cloudfront_mock = MagicMock()
+    monkeypatch.setattr('maven_lambda.metadata.cloudfront', cloudfront_mock)
+    monkeypatch.setenv('CLOUDFRONT_DISTRIBUTION_ID', 'fake-distribution-id')
+    monkeypatch.setattr('slugid.nice', lambda: 'some_-Known_-_Slug--Id')
+
     metadata_lambda_handler(event, context)
 
     bucket_mock.objects.filter.assert_called_once_with(Prefix=expected_prefix)
@@ -219,6 +239,17 @@ def test_metadata_lambda_handler(monkeypatch, inserted_key, bucket_keys, expecte
     expected_call_count = len(expected_metadata) * 3
     assert s3_mock.Object.call_count == expected_call_count
     assert object_mock.put.call_count == expected_call_count
+
+    cloudfront_mock.create_invalidation.assert_called_once_with(
+        DistributionId='fake-distribution-id',
+        InvalidationBatch={
+            'Paths': {
+                'Quantity': expected_cache_quantity,
+                'Items': expected_cache_items,
+            },
+            'CallerReference': 'some_-Known_-_Slug--Id',
+        }
+    )
 
 @pytest.fixture
 def s3_event():
@@ -242,7 +273,7 @@ def test_copy_lambda_handler_not_found(s3_event):
     maven_lambda.copy.s3_object_has_more_than_one_version = f
     assert copy_lambda_handler(s3_event, {}) == {"statusCode": 404}
 
-    
+
 def test_copy_lambda_handler_conflict(s3_event):
     import os
     os.environ["TARGET_BUCKET"] = target_bucket = 'foo'
@@ -272,4 +303,3 @@ def test_copy_lambda_handler_conflict(s3_event):
         },
         Key="object_key",
     )
-

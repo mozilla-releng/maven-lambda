@@ -47,7 +47,7 @@ def lambda_handler(event, context):
         print('Extracted artifact folder "{}" from key'.format(artifact_folder))
         poms_in_artifact_folder = list_pom_files_in_subfolders(bucket, artifact_folder)
         print('Found .pom in artifact folder (and subfolders): {}'.format(poms_in_artifact_folder))
-        craft_and_upload_maven_metadata(
+        uploaded_metadata_files = craft_and_upload_maven_metadata(
             bucket, artifact_folder, poms_in_artifact_folder,
             metadata_function=generate_release_maven_metadata
         )
@@ -60,10 +60,12 @@ def lambda_handler(event, context):
                 if key.startswith(version_folder)
             ]
             print('.pom in version folder: {}'.format(poms_in_version_folder))
-            craft_and_upload_maven_metadata(
+            uploaded_metadata_files.extend(craft_and_upload_maven_metadata(
                 bucket, version_folder, poms_in_version_folder,
                 metadata_function=generate_snapshot_listing_metadata
-            )
+            ))
+
+        invalidate_cloudfront_cache(uploaded_metadata_files)
 
     except Exception as e:
         print(e)
@@ -116,18 +118,21 @@ def craft_and_upload_maven_metadata(bucket, folder, pom_files, metadata_function
     bucket_name = bucket.name
     metadata = metadata_function(bucket_name, pom_files)
     print('Generated maven-metadata content: {}'.format(metadata))
-    upload_s3_file(
+    uploaded_metadata_files = []
+    uploaded_metadata_files.append(upload_s3_file(
         bucket_name, folder, METADATA_BASE_FILE_NAME, metadata, content_type='text/xml'
-    )
+    ))
     print('Uploaded new maven-metadata.xml')
 
     checksums = generate_checksums(metadata)
     print('New maven-metadata.xml checksums: {}'.format(checksums))
     for type_, sum_ in checksums.items():
-        upload_s3_file(
+        uploaded_metadata_files.append(upload_s3_file(
             bucket_name, folder, '{}.{}'.format(METADATA_BASE_FILE_NAME, type_), sum_
-        )
+        ))
         print('Uploaded new {} checksum file'.format(type_))
+
+    return uploaded_metadata_files
 
 
 def generate_release_maven_metadata(_, folder_content_keys):
@@ -280,14 +285,18 @@ def upload_s3_file(bucket_name, folder, file_name, data, content_type='text/plai
     folder = folder.rstrip('/')
     key = '{}/{}'.format(folder, file_name)
     s3.Object(bucket_name, key).put(Body=data, ContentType=content_type)
-    invalidate_cloudfront(path=key)
+    return key
 
 
-def invalidate_cloudfront(path):
+def invalidate_cloudfront_cache(paths):
+    sanitized_paths = [
+        path if path.startswith('/') else '/{}'.format(path) for path in paths
+    ]
+    number_of_paths = len(sanitized_paths)
+    print('Invalidating {} CloudFront paths: {}'.format(number_of_paths, sanitized_paths))
+
     distribution_id = os.environ.get('CLOUDFRONT_DISTRIBUTION_ID', None)
-
     if distribution_id:
-        path = path if path.startswith('/') else '/{}'.format(path)
         request_id = slugid.nice()
 
         try:
@@ -295,16 +304,16 @@ def invalidate_cloudfront(path):
                 DistributionId=distribution_id,
                 InvalidationBatch={
                     'Paths': {
-                        'Quantity': 1,
-                        'Items': [
-                            path,
-                        ],
+                        'Quantity': number_of_paths,
+                        'Items': sanitized_paths,
                     },
                     'CallerReference': request_id,
                 }
             )
         except ClientError as e:
             print('WARN: Could not invalidate cache. Reason: {}'.format(e))
+    else:
+        print('CLOUDFRONT_DISTRIBUTION_ID not set. No cache to invalidate.')
 
 
 def generate_checksums(data):
