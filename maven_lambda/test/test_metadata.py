@@ -20,7 +20,7 @@ from maven_lambda.metadata import (
     get_version,
     get_version_folder,
     is_snapshot,
-    invalidate_cloudfront,
+    invalidate_cloudfront_cache,
     lambda_handler,
     list_pom_files_in_subfolders,
     upload_s3_file,
@@ -47,7 +47,16 @@ def test_lambda_handler(monkeypatch):
     monkeypatch.setattr('maven_lambda.metadata.list_pom_files_in_subfolders', lambda _, __: [
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',
     ])
-    monkeypatch.setattr('maven_lambda.metadata.craft_and_upload_maven_metadata', lambda _, __, ___, metadata_function=None: None)
+    monkeypatch.setattr(
+        'maven_lambda.metadata.craft_and_upload_maven_metadata',
+        lambda _, __, ___, metadata_function=None: [
+            'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',
+        ]
+    )
+
+    def cloudfront(paths):
+        assert paths == ['maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom']
+    monkeypatch.setattr('maven_lambda.metadata.invalidate_cloudfront_cache', cloudfront)
 
     lambda_handler(event, context)
     s3_mock.Bucket.assert_called_once_with('some_bucket_name')
@@ -142,7 +151,7 @@ def test_craft_and_upload_maven_metadata(monkeypatch):
     upload_s3_file_mock = MagicMock()
     monkeypatch.setattr('maven_lambda.metadata.upload_s3_file', upload_s3_file_mock)
 
-    craft_and_upload_maven_metadata(
+    assert craft_and_upload_maven_metadata(
         bucket_mock,
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/',
         [
@@ -389,34 +398,37 @@ def test_upload_s3_file(monkeypatch):
     s3_mock.Object.return_value = object_mock
     invalidate_cloudfront_mock = MagicMock()
     monkeypatch.setattr('maven_lambda.metadata.s3', s3_mock)
-    monkeypatch.setattr('maven_lambda.metadata.invalidate_cloudfront', invalidate_cloudfront_mock)
-    upload_s3_file(
+    monkeypatch.setattr('maven_lambda.metadata.invalidate_cloudfront_cache', invalidate_cloudfront_mock)
+    assert upload_s3_file(
         'some_bucket', 'some/folder/', 'some_file', 'some data', content_type='some/content-type'
-    )
+    ) == 'some/folder/some_file'
 
     s3_mock.Object.assert_called_once_with('some_bucket', 'some/folder/some_file')
     object_mock.put.assert_called_once_with(Body='some data', ContentType='some/content-type')
-    invalidate_cloudfront_mock.assert_called_once_with(path='some/folder/some_file')
 
 
-@pytest.mark.parametrize('cloudfront_distribution_id', (None, 'some-id'))
-def test_invalidate_cloudfront(monkeypatch, cloudfront_distribution_id):
+@pytest.mark.parametrize('cloudfront_distribution_id, paths, expected_items, expected_quantity', ((
+    None, ['some/folder/some_file'], None, None
+), (
+    'some-id', ['some/folder/some_file'], ['/some/folder/some_file'], 1
+), (
+    'some-id', ['some/folder/some_file', '/another/folder/another_file'], ['/some/folder/some_file', '/another/folder/another_file'], 2
+)))
+def test_invalidate_cloudfront(monkeypatch, cloudfront_distribution_id, paths, expected_items, expected_quantity):
     cloudfront_mock = MagicMock()
     monkeypatch.setattr('maven_lambda.metadata.cloudfront', cloudfront_mock)
     monkeypatch.setattr('os.environ.get', lambda _, __: cloudfront_distribution_id)
     monkeypatch.setattr('slugid.nice', lambda: 'some_-Known_-_Slug--Id')
 
-    invalidate_cloudfront('some/folder/some_file')
+    invalidate_cloudfront_cache(paths)
 
     if cloudfront_distribution_id:
         cloudfront_mock.create_invalidation.assert_called_once_with(
             DistributionId='some-id',
             InvalidationBatch={
                 'Paths': {
-                    'Quantity': 1,
-                    'Items': [
-                        '/some/folder/some_file',
-                    ],
+                    'Quantity': expected_quantity,
+                    'Items': expected_items,
                 },
                 'CallerReference': 'some_-Known_-_Slug--Id',
             }
@@ -425,15 +437,15 @@ def test_invalidate_cloudfront(monkeypatch, cloudfront_distribution_id):
         cloudfront_mock.create_invalidation.assert_not_called()
 
 
-def test_invalidate_cloudfront_does_not_bail_out(monkeypatch):
+def test_invalidate_cloudfront_does_not_bail_out_on_client_error(monkeypatch):
     cloudfront_mock = MagicMock()
     monkeypatch.setattr('maven_lambda.metadata.cloudfront', cloudfront_mock)
     monkeypatch.setattr('os.environ.get', lambda _, __: 'some-id')
-    monkeypatch.setattr('slugid.nice', lambda: b'some_-Known_-_Slug--Id')
+    monkeypatch.setattr('slugid.nice', lambda: 'some_-Known_-_Slug--Id')
 
     cloudfront_mock.create_invalidation.side_effect = ClientError({}, 'CreateInvalidation')
 
-    invalidate_cloudfront('some/folder/some_file')  # Does not raise
+    invalidate_cloudfront_cache(['some/folder/some_file'])  # Does not raise
 
 
 @pytest.mark.parametrize('data', (
