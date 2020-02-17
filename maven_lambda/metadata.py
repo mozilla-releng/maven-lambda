@@ -241,6 +241,11 @@ def _fetch_extension_from_pom_file_content(bucket_name, pom_key):
 
     root = tree.getroot()
     packaging_element = root.find('m:packaging', XML_NAMESPACES)
+
+    # Bug 1616010 - Jars don't necessarily specify a packaging `entry`
+    if packaging_element is None:
+        return 'jar'
+
     return packaging_element.text
 
 
