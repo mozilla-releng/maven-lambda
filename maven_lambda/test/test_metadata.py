@@ -281,17 +281,32 @@ def test_get_snapshots_metadata(monkeypatch):
     }]
 
 
-def test_fetch_extension_from_pom_file_content(monkeypatch):
+@pytest.mark.parametrize('xml_data, expected_format', ((
+    '''<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+<packaging>aar</packaging>
+</project>''',
+    'aar',
+), (
+    '''<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+<packaging>jar</packaging>
+</project>''',
+    'jar',
+), (
+    '''<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+</project>''',
+    'jar',
+)))
+def test_fetch_extension_from_pom_file_content(monkeypatch, xml_data, expected_format):
     s3_mock = MagicMock()
     bucket_mock = MagicMock()
     s3_mock.Bucket.return_value = bucket_mock
 
     def fake_download(_, destination):
         with open(destination, 'w') as f:
-            f.write('''<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0">
-  <packaging>aar</packaging>
-</project>''')
+            f.write(xml_data)
 
     bucket_mock.download_file.side_effect = fake_download
 
@@ -299,7 +314,7 @@ def test_fetch_extension_from_pom_file_content(monkeypatch):
 
     assert _fetch_extension_from_pom_file_content('some_bucket_name',
         'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',
-    ) == 'aar'
+    ) == expected_format
 
     s3_mock.Bucket.assert_called_once_with('some_bucket_name')
 
