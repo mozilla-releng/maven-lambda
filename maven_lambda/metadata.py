@@ -52,19 +52,6 @@ def lambda_handler(event, context):
             metadata_function=generate_release_maven_metadata
         )
 
-        if is_snapshot(key):
-            version_folder = get_version_folder(key)
-            print('Extracted version folder "{}" from key'.format(version_folder))
-            poms_in_version_folder = [
-                key for key in poms_in_artifact_folder
-                if key.startswith(version_folder)
-            ]
-            print('.pom in version folder: {}'.format(poms_in_version_folder))
-            uploaded_metadata_files.extend(craft_and_upload_maven_metadata(
-                bucket, version_folder, poms_in_version_folder,
-                metadata_function=generate_snapshot_listing_metadata
-            ))
-
         invalidate_cloudfront_cache(uploaded_metadata_files)
 
     except Exception as e:
@@ -137,16 +124,15 @@ def craft_and_upload_maven_metadata(bucket, folder, pom_files, metadata_function
 
 def generate_release_maven_metadata(_, folder_content_keys):
     versions_per_path = generate_versions(folder_content_keys)
-    latest_version = get_latest_version(versions_per_path, exclude_snapshots=False)
-    latest_non_snapshot_version = get_latest_version(versions_per_path, exclude_snapshots=True)
+    latest_version = get_latest_version(versions_per_path)
 
     root = _generate_xml_root_of_common_maven_metadata(folder_content_keys)
 
     versioning = ET.SubElement(root, 'versioning')
 
     ET.SubElement(versioning, 'latest').text = latest_version
-    ET.SubElement(versioning, 'release').text = '' if latest_non_snapshot_version is None \
-        else latest_non_snapshot_version
+    ET.SubElement(versioning, 'release').text = '' if latest_version is None \
+        else latest_version
 
     versions = ET.SubElement(versioning, 'versions')
 
@@ -175,56 +161,6 @@ def _convert_xml_root_to_string(root):
         stream, encoding='unicode', xml_declaration=True, method='xml', short_empty_elements=False
     )
     return stream.getvalue()
-
-
-def generate_snapshot_listing_metadata(bucket_name, pom_files_keys):
-    snapshots_metadata = get_snapshots_metadata(bucket_name, pom_files_keys)
-    sorted_snapshot_metadata = sorted(
-        snapshots_metadata, key=lambda x: x['timestamp'], reverse=True
-    )
-    latest_snapshot_metadata = sorted_snapshot_metadata[0]
-
-    root = _generate_xml_root_of_common_maven_metadata(pom_files_keys)
-    ET.SubElement(root, 'version').text = get_version(pom_files_keys[0])
-
-    versioning = ET.SubElement(root, 'versioning')
-    snapshot = ET.SubElement(versioning, 'snapshot')
-    ET.SubElement(snapshot, 'timestamp').text = latest_snapshot_metadata['timestamp'].strftime(
-        SNAPSHOT_FILE_TIMESTAMP
-    )
-    ET.SubElement(snapshot, 'buildNumber').text = str(latest_snapshot_metadata['build_number'])
-
-    ET.SubElement(versioning, 'lastUpdated').text = generate_last_updated()
-
-    snapshot_versions = ET.SubElement(versioning, 'snapshotVersions')
-
-    for metadata in sorted_snapshot_metadata:
-        snapshot_version = ET.SubElement(snapshot_versions, 'snapshotVersion')
-        ET.SubElement(snapshot_version, 'extension').text = metadata['extension']
-        ET.SubElement(snapshot_version, 'value').text = '{}-{}-{}'.format(
-            metadata['version'],
-            metadata['timestamp'].strftime(SNAPSHOT_FILE_TIMESTAMP),
-            metadata['build_number']
-        )
-        ET.SubElement(snapshot_version, 'updated').text = metadata['timestamp'].strftime(
-            POM_TIMESTAMP
-        )
-
-    return _convert_xml_root_to_string(root)
-
-
-def get_snapshots_metadata(bucket_name, all_snapshot_pom_keys):
-    pom_keys_and_file_names = [
-        (key, key.split('/')[-1])
-        for key in all_snapshot_pom_keys
-    ]
-
-    return [{
-        'build_number': _extract_build_number_from_file_name(file_name),
-        'extension': _fetch_extension_from_pom_file_content(bucket_name, key),
-        'timestamp': _extract_timestamp_from_file_name(file_name),
-        'version': _extract_version_from_file_name(file_name),
-    } for key, file_name in pom_keys_and_file_names]
 
 
 def _extract_build_number_from_file_name(file_name):
@@ -268,7 +204,7 @@ def generate_last_updated():
     return datetime.utcnow().strftime(POM_TIMESTAMP)
 
 
-def get_latest_version(versions_per_path, exclude_snapshots=False):
+def get_latest_version(versions_per_path):
     maven_versions = []
     for path, version in versions_per_path.items():
         try:
@@ -278,8 +214,6 @@ def get_latest_version(versions_per_path, exclude_snapshots=False):
                 '"{}" does not contain a valid version. See root error.'.format(path)
             ) from error
 
-    if exclude_snapshots:
-        maven_versions = [version for version in maven_versions if not version.is_snapshot]
     if not maven_versions:
         return None
     latest_version = reduce(lambda x, y: x if x >= y else y, maven_versions)
@@ -328,7 +262,3 @@ def generate_checksums(data):
         'md5': hashlib.md5(data).hexdigest(),
         'sha1': hashlib.sha1(data).hexdigest(),
     }
-
-
-def is_snapshot(key):
-    return '-SNAPSHOT' in key
