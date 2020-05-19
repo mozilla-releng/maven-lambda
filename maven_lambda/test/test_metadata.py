@@ -10,16 +10,13 @@ from maven_lambda.metadata import (
     generate_checksums,
     generate_last_updated,
     generate_release_maven_metadata,
-    generate_snapshot_listing_metadata,
     generate_versions,
     get_artifact_id,
     get_artifact_folder,
     get_group_id,
     get_latest_version,
-    get_snapshots_metadata,
     get_version,
     get_version_folder,
-    is_snapshot,
     invalidate_cloudfront_cache,
     lambda_handler,
     list_pom_files_in_subfolders,
@@ -85,9 +82,6 @@ def test_get_artifact_folder(key, expected):
 @pytest.mark.parametrize('key, expected', ((
     'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',
     'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/',
-), (
-    'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom',
-    'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/',
 ), (
     'maven2/org/mozilla/components/browser-domains/0.30.0/browser-domains-0.30.0.pom',
     'maven2/org/mozilla/components/browser-domains/0.30.0/',
@@ -220,67 +214,6 @@ def test_generate_release_maven_metadata():
 "</metadata>")
 
 
-@freeze_time('2018-10-31 16:00:30')
-def test_generate_snapshot_listing_metadata(monkeypatch):
-    monkeypatch.setattr('maven_lambda.metadata.get_snapshots_metadata', lambda _, __: [{
-        'build_number': 1,
-        'extension': 'aar',
-        'timestamp': datetime(2018, 10, 29, 15, 45, 29),
-        'version': '0.30.0',
-    }, {
-        'build_number': 2,
-        'extension': 'aar',
-        'timestamp': datetime(2018, 10, 30, 16, 46, 30),
-        'version': '0.30.0',
-    }])
-    assert generate_snapshot_listing_metadata('some_bucket_name', [
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom',
-    ]) == ("<?xml version='1.0' encoding='UTF-8'?>\n"
-"<metadata>"
-  "<groupId>org.mozilla.components</groupId>"
-  "<artifactId>browser-domains</artifactId>"
-  "<version>0.30.0-SNAPSHOT</version>"
-  "<versioning>"
-    "<snapshot>"
-      "<timestamp>20181030.164630</timestamp>"
-      "<buildNumber>2</buildNumber>"
-    "</snapshot>"
-    "<lastUpdated>20181031160030</lastUpdated>"
-    "<snapshotVersions>"
-      "<snapshotVersion>"
-        "<extension>aar</extension>"
-        "<value>0.30.0-20181030.164630-2</value>"
-        "<updated>20181030164630</updated>"
-      "</snapshotVersion>"
-      "<snapshotVersion>"
-        "<extension>aar</extension>"
-        "<value>0.30.0-20181029.154529-1</value>"
-        "<updated>20181029154529</updated>"
-      "</snapshotVersion>"
-    "</snapshotVersions>"
-  "</versioning>"
-"</metadata>")
-
-
-def test_get_snapshots_metadata(monkeypatch):
-    monkeypatch.setattr('maven_lambda.metadata._fetch_extension_from_pom_file_content', lambda _, __: 'aar')
-    assert get_snapshots_metadata('some_bucket_name', [
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom',
-    ]) == [{
-        'build_number': 2,
-        'extension': 'aar',
-        'timestamp': datetime(2018, 10, 30, 16, 46, 30),
-        'version': '0.30.0',
-    }, {
-        'build_number': 1,
-        'extension': 'aar',
-        'timestamp': datetime(2018, 10, 29, 15, 45, 29),
-        'version': '0.30.0',
-    }]
-
-
 @pytest.mark.parametrize('xml_data, expected_format', ((
     '''<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
@@ -343,7 +276,7 @@ def test_generate_last_updated():
     assert generate_last_updated() == '20181029160030'
 
 
-@pytest.mark.parametrize('versions_per_path, exclude_snapshots, expected', ((
+@pytest.mark.parametrize('versions_per_path, expected', ((
     {
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.pom': '64.0.20181018103737',
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom': '63.0.20180830111743',
@@ -352,49 +285,26 @@ def test_generate_last_updated():
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom': '65.0.20181029100346',
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.pom': '64.0.20181019100100',
     },
-    False,
     '65.0.20181029100346',
 ), (
     {
         'some/path': '64.0',
-        'some/snapshot/path': '64.0-SNAPSHOT',
     },
-    False,
     '64.0',
 ), (
     {
         'some/path': '64.0',
-        'some/snapshot/path': '64.0-SNAPSHOT',
     },
-    True,
     '64.0',
 ), (
     {
         'some/path':'64.0',
-        'some/snapshot/path': '64.0-SNAPSHOT',
         'some/other/path':'65.0',
     },
-    False,
     '65.0',
-), (
-    {
-        'some/former/snapshot/path': '63.0-SNAPSHOT',
-        'some/snapshot/path': '64.0-SNAPSHOT',
-        'some/latter/snapshot/path': '65.0-SNAPSHOT'
-    },
-    False,
-    '65.0-SNAPSHOT',
-), (
-    {
-        'some/former/snapshot/path': '63.0-SNAPSHOT',
-        'some/snapshot/path': '64.0-SNAPSHOT',
-        'some/latter/snapshot/path': '65.0-SNAPSHOT',
-    },
-    True,
-    None,
 )))
-def test_get_latest_version(versions_per_path, exclude_snapshots, expected):
-    assert get_latest_version(versions_per_path, exclude_snapshots) == expected
+def test_get_latest_version(versions_per_path, expected):
+    assert get_latest_version(versions_per_path) == expected
 
 
 def test_get_latest_version_error():
@@ -402,7 +312,7 @@ def test_get_latest_version_error():
         versions_per_path = {
             'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0-TESTING/geckoview-nightly-x86-64.0-TESTING.pom': '64.0-TESTING'
         }
-        get_latest_version(versions_per_path, exclude_snapshots=False)
+        get_latest_version(versions_per_path)
 
     assert '"maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0-TESTING/geckoview-nightly-x86-64.0-TESTING.pom" does not contain a valid version. See root error.' in str(excinfo.value)
 
@@ -472,12 +382,3 @@ def test_generate_checksums(data):
         'md5': 'a48fba03a9ac529b358935164826d9fe',
         'sha1': '714f4de20aa1899ed09e22a82304e12d4658eac1',
     }
-
-
-@pytest.mark.parametrize('key, expected', (
-    ('maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/', True),
-    ('maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom', True),
-    ('maven2/org/mozilla/components/browser-domains/0.30.0/browser-domains-0.30.0.pom', False)
-))
-def test_is_snapshot(key, expected):
-    assert is_snapshot(key) == expected

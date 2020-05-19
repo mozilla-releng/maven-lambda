@@ -94,95 +94,91 @@ from maven_lambda.copy import lambda_handler as copy_lambda_handler
     ],
     3,
 ), (
-    'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',
+    # FIXME: duplicate task to make @parametrize happy. Will rewrite this to be
+    # nightly-maven orientated in bug 1639133 shortly.
+    'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom',
     (
         # Full content of a folder
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom.md5',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.pom.sha1',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar.md5',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2.jar.sha1',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar.md5',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-sources.jar.sha1',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar.md5',
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181030.164630-2-javadoc.jar.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-sources.jar',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-sources.jar.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-sources.jar.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-javadoc.jar',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-javadoc.jar.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743-javadoc.jar.sha1',
 
-        # Partial content only
-        'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/browser-domains-0.30.0-20181029.154529-1.pom',
+        # Just partial content
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.jar',
+
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830111743/geckoview-nightly-x86-63.0.20180830111743.jar',
+
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181018103737/geckoview-nightly-x86-64.0.20181018103737.jar',
+
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.jar',
+
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181028102554/geckoview-nightly-x86-65.0.20181028102554.jar',
+
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom.md5',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom.sha1',
+        'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.jar',
     ),
-    'maven2/org/mozilla/components/browser-domains/',
+    'maven2/org/mozilla/geckoview/geckoview-nightly-x86/',
     {
-        'snapshot_metadata': {
-            'md5_data': '3e61e09c875afb80475d7acc857dc5c0',
-            'md5_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.md5',
-            'prefix': 'maven2/org/mozilla/components/browser-domains/',
-            'sha1_data': '9b3cb2ca04652606e543957ca954c4f2a9a39d5b',
-            'sha1_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.sha1',
-            'xml_data': (
-                "<?xml version='1.0' encoding='UTF-8'?>\n"
-                "<metadata>"
-                  "<groupId>org.mozilla.components</groupId>"
-                  "<artifactId>browser-domains</artifactId>"
-                  "<version>0.30.0-SNAPSHOT</version>"
-                  "<versioning>"
-                    "<snapshot>"
-                      "<timestamp>20181030.164630</timestamp>"
-                      "<buildNumber>2</buildNumber>"
-                    "</snapshot>"
-                    "<lastUpdated>20181029160030</lastUpdated>"
-                    "<snapshotVersions>"
-                      "<snapshotVersion>"
-                        "<extension>aar</extension>"
-                        "<value>0.30.0-20181030.164630-2</value>"
-                        "<updated>20181030164630</updated>"
-                      "</snapshotVersion>"
-                      "<snapshotVersion>"
-                        "<extension>aar</extension>"
-                        "<value>0.30.0-20181029.154529-1</value>"
-                        "<updated>20181029154529</updated>"
-                      "</snapshotVersion>"
-                    "</snapshotVersions>"
-                  "</versioning>"
-                "</metadata>"
-            ),
-            'xml_key': 'maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml',
-        },
         'version_metadata': {
-            'md5_data': '3bf0e86cacbce020e5e041f026455160',
-            'md5_key': 'maven2/org/mozilla/components/browser-domains/maven-metadata.xml.md5',
-
-            'sha1_data': '10a78e44df3427953f0f3bd5919568a89a43ce90',
-            'sha1_key': 'maven2/org/mozilla/components/browser-domains/maven-metadata.xml.sha1',
+            'md5_data': 'dbb16613f87336f53724b13ffe29f2b9',
+            'md5_key': 'maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml.md5',
+            'sha1_data': '2e2e61779fe78ce649ddfca8838e06dc54b0e40e',
+            'sha1_key': 'maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml.sha1',
             'xml_data': (
                 "<?xml version='1.0' encoding='UTF-8'?>\n"
                 "<metadata>"
-                    "<groupId>org.mozilla.components</groupId>"
-                    "<artifactId>browser-domains</artifactId>"
+                    "<groupId>org.mozilla.geckoview</groupId>"
+                    "<artifactId>geckoview-nightly-x86</artifactId>"
                     "<versioning>"
-                        "<latest>0.30.0-SNAPSHOT</latest>"
-                        "<release></release>"
+                        "<latest>65.0.20181029100346</latest>"
+                        "<release>65.0.20181029100346</release>"
                         "<versions>"
-                            "<version>0.30.0-SNAPSHOT</version>"
+                            "<version>63.0.20180830100125</version>"
+                            "<version>63.0.20180830111743</version>"
+                            "<version>64.0.20181018103737</version>"
+                            "<version>64.0.20181019100100</version>"
+                            "<version>65.0.20181028102554</version>"
+                            "<version>65.0.20181029100346</version>"
                         "</versions>"
                         "<lastUpdated>20181029160030</lastUpdated>"
                     "</versioning>"
                 "</metadata>"
             ),
-            'xml_key': 'maven2/org/mozilla/components/browser-domains/maven-metadata.xml',
+            'xml_key': 'maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml',
         },
     },
     [
-        '/maven2/org/mozilla/components/browser-domains/maven-metadata.xml',
-        '/maven2/org/mozilla/components/browser-domains/maven-metadata.xml.md5',
-        '/maven2/org/mozilla/components/browser-domains/maven-metadata.xml.sha1',
-        '/maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml',
-        '/maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.md5',
-        '/maven2/org/mozilla/components/browser-domains/0.30.0-SNAPSHOT/maven-metadata.xml.sha1',
+        '/maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml',
+        '/maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml.md5',
+        '/maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml.sha1',
     ],
-    6,
+    3,
 )))
 def test_metadata_lambda_handler(monkeypatch, inserted_key, bucket_keys, expected_prefix, expected_metadata, expected_cache_items, expected_cache_quantity):
     event = {
