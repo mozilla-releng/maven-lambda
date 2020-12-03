@@ -10,7 +10,7 @@ The [mozilla-mobile](https://github.com/mozilla-mobile/) teams need a maven repo
 
 Mozilla could have used an existing product like [Sonatype's Nexus](https://www.sonatype.com/nexus/). Although, we want to ensure the security of these binaries in case an attacker compromises the server. There are 2 main ways to solve this:
 
- a. sign the binaries to ensure they were modified at rest.
+ a. sign the binaries to ensure they were not modified at rest.
 
  b. monitor the server to make sure no unusual activity happens.
 
