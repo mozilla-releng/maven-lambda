@@ -226,11 +226,11 @@ def test_metadata_lambda_handler(monkeypatch, inserted_key, bucket_keys, expecte
 
     for expected_item in expected_metadata.values():
         assert call('some_bucket_name', expected_item['xml_key']) in s3_mock.Object.call_args_list
-        assert call(Body=expected_item['xml_data'], ContentType='text/xml') in object_mock.put.call_args_list
+        assert call(Body=expected_item['xml_data'], ContentType='text/xml', CacheControl='max-age=600') in object_mock.put.call_args_list
         assert call('some_bucket_name', expected_item['md5_key']) in s3_mock.Object.call_args_list
-        assert call(Body=expected_item['md5_data'], ContentType='text/plain') in object_mock.put.call_args_list
+        assert call(Body=expected_item['md5_data'], ContentType='text/plain', CacheControl='max-age=600') in object_mock.put.call_args_list
         assert call('some_bucket_name', expected_item['sha1_key']) in s3_mock.Object.call_args_list
-        assert call(Body=expected_item['sha1_data'], ContentType='text/plain') in object_mock.put.call_args_list
+        assert call(Body=expected_item['sha1_data'], ContentType='text/plain', CacheControl='max-age=600') in object_mock.put.call_args_list
 
     expected_call_count = len(expected_metadata) * 3
     assert s3_mock.Object.call_count == expected_call_count
