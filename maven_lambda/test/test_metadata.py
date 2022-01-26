@@ -329,7 +329,7 @@ def test_upload_s3_file(monkeypatch):
     ) == 'some/folder/some_file'
 
     s3_mock.Object.assert_called_once_with('some_bucket', 'some/folder/some_file')
-    object_mock.put.assert_called_once_with(Body='some data', ContentType='some/content-type')
+    object_mock.put.assert_called_once_with(Body='some data', ContentType='some/content-type', CacheControl='max-age=600')
 
 
 @pytest.mark.parametrize('cloudfront_distribution_id, paths, expected_items, expected_quantity', ((

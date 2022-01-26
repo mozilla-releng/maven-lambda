@@ -223,7 +223,8 @@ def get_latest_version(versions_per_path):
 def upload_s3_file(bucket_name, folder, file_name, data, content_type='text/plain'):
     folder = folder.rstrip('/')
     key = '{}/{}'.format(folder, file_name)
-    s3.Object(bucket_name, key).put(Body=data, ContentType=content_type)
+    s3.Object(bucket_name, key).put(Body=data, ContentType=content_type,
+                                    CacheControl='max-age=600')
     return key
 
 
