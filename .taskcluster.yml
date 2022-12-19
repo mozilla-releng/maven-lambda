@@ -13,7 +13,10 @@ tasks:
     provisioner_id: proj-releng
     worker_type: ci
     max_run_time_in_seconds: 1800
-    docker_image: python:3.6  # AWS Lambda supports this version only
+    # TODO Upgrade to Python 3.10 when it becomes available:
+    # https://aws.amazon.com/about-aws/whats-new/2021/08/aws-lambda-adds-support-python-3-9/
+    # https://github.com/aws/aws-lambda-base-images/issues/31
+    docker_image: python:3.9
     task_owner: ${event.sender.login}@users.noreply.github.com
 
     local_artifact_path: /artifacts/function.zip
@@ -23,13 +26,13 @@ tasks:
       && apt install --yes zip
       && pip install --requirement requirements/base.txt
       && mkdir /artifacts
-      && cd /usr/local/lib/python3.6/site-packages/
+      && cd /usr/local/lib/python3.9/site-packages/
       && zip -r9 /artifacts/function.zip .
       && cd /work_dir/maven_lambda/
       && zip -g /artifacts/function.zip *.py
       && cd /work_dir/
       && pip install tox
-      && tox -e py36
+      && tox -e py39
   in:
     - $if: 'tasks_for == "github-pull-request" && event["action"] in ["opened", "reopened", "edited", "synchronize"]'
       then:
