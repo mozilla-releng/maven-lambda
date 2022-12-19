@@ -194,7 +194,7 @@ def test_generate_release_maven_metadata():
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/63.0.20180830100125/geckoview-nightly-x86-63.0.20180830100125.pom',
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/65.0.20181029100346/geckoview-nightly-x86-65.0.20181029100346.pom',
         'maven2/org/mozilla/geckoview/geckoview-nightly-x86/64.0.20181019100100/geckoview-nightly-x86-64.0.20181019100100.pom',
-    ]) == ("<?xml version='1.0' encoding='UTF-8'?>\n"
+    ]) == ("<?xml version='1.0' encoding='utf-8'?>\n"
 "<metadata>"
     "<groupId>org.mozilla.geckoview</groupId>"
     "<artifactId>geckoview-nightly-x86</artifactId>"
@@ -215,19 +215,19 @@ def test_generate_release_maven_metadata():
 
 
 @pytest.mark.parametrize('xml_data, expected_format', ((
-    '''<?xml version="1.0" encoding="UTF-8"?>
+    '''<?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
 <packaging>aar</packaging>
 </project>''',
     'aar',
 ), (
-    '''<?xml version="1.0" encoding="UTF-8"?>
+    '''<?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
 <packaging>jar</packaging>
 </project>''',
     'jar',
 ), (
-    '''<?xml version="1.0" encoding="UTF-8"?>
+    '''<?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
 </project>''',
     'jar',

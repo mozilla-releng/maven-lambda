@@ -60,12 +60,12 @@ from maven_lambda.copy import lambda_handler as copy_lambda_handler
     'maven2/org/mozilla/geckoview/geckoview-nightly-x86/',
     {
         'version_metadata': {
-            'md5_data': 'dbb16613f87336f53724b13ffe29f2b9',
+            'md5_data': '85e812c4db705f59ce4afc81efbd229c',
             'md5_key': 'maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml.md5',
-            'sha1_data': '2e2e61779fe78ce649ddfca8838e06dc54b0e40e',
+            'sha1_data': 'c9f580b6a9b8a28ef05aa16654a17c908719684b',
             'sha1_key': 'maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml.sha1',
             'xml_data': (
-                "<?xml version='1.0' encoding='UTF-8'?>\n"
+                "<?xml version='1.0' encoding='utf-8'?>\n"
                 "<metadata>"
                     "<groupId>org.mozilla.geckoview</groupId>"
                     "<artifactId>geckoview-nightly-x86</artifactId>"
@@ -146,12 +146,12 @@ from maven_lambda.copy import lambda_handler as copy_lambda_handler
     'maven2/org/mozilla/geckoview/geckoview-nightly-x86/',
     {
         'version_metadata': {
-            'md5_data': 'dbb16613f87336f53724b13ffe29f2b9',
+            'md5_data': '85e812c4db705f59ce4afc81efbd229c',
             'md5_key': 'maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml.md5',
-            'sha1_data': '2e2e61779fe78ce649ddfca8838e06dc54b0e40e',
+            'sha1_data': 'c9f580b6a9b8a28ef05aa16654a17c908719684b',
             'sha1_key': 'maven2/org/mozilla/geckoview/geckoview-nightly-x86/maven-metadata.xml.sha1',
             'xml_data': (
-                "<?xml version='1.0' encoding='UTF-8'?>\n"
+                "<?xml version='1.0' encoding='utf-8'?>\n"
                 "<metadata>"
                     "<groupId>org.mozilla.geckoview</groupId>"
                     "<artifactId>geckoview-nightly-x86</artifactId>"
@@ -201,7 +201,7 @@ def test_metadata_lambda_handler(monkeypatch, inserted_key, bucket_keys, expecte
 
     def fake_download(_, destination):
         with open(destination, 'w') as f:
-            f.write('''<?xml version="1.0" encoding="UTF-8"?>
+            f.write('''<?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <packaging>aar</packaging>
 </project>''')
