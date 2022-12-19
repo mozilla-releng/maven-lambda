@@ -11,6 +11,7 @@ from botocore.exceptions import ClientError
 from datetime import datetime
 from functools import reduce
 from mozilla_version.maven import MavenVersion
+from mozilla_version.mobile import MobileVersion
 from mozilla_version.errors import PatternNotMatchedError
 from xml.etree import cElementTree as ET
 
@@ -205,19 +206,27 @@ def generate_last_updated():
 
 
 def get_latest_version(versions_per_path):
-    maven_versions = []
-    for path, version in versions_per_path.items():
-        try:
-            maven_versions.append(MavenVersion.parse(version))
-        except PatternNotMatchedError as error:
-            raise ValueError(
-                '"{}" does not contain a valid version. See root error.'.format(path)
-            ) from error
+    maven_versions = [
+        _parse_version(version, path)
+        for path, version in versions_per_path.items()
+    ]
 
     if not maven_versions:
         return None
+
     latest_version = reduce(lambda x, y: x if x >= y else y, maven_versions)
     return str(latest_version)
+
+
+def _parse_version(version_string, path):
+    parse_func = MobileVersion.parse if path.startswith("maven2/org/mozilla/components/") \
+        else MavenVersion.parse
+    try:
+        return parse_func(version_string)
+    except PatternNotMatchedError as error:
+        raise ValueError(
+            '"{}" does not contain a valid version. See root error.'.format(path)
+        ) from error
 
 
 def upload_s3_file(bucket_name, folder, file_name, data, content_type='text/plain'):
