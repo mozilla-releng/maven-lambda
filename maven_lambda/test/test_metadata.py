@@ -302,6 +302,21 @@ def test_generate_last_updated():
         'some/other/path':'65.0',
     },
     '65.0',
+), (
+    {
+        'maven2/org/mozilla/components/browser-engine-gecko/109.0b1/browser-engine-gecko-109.0b1.pom':'109.0b1',
+        'maven2/org/mozilla/components/browser-engine-gecko/109.0b2/browser-engine-gecko-109.0b2.pom':'109.0b2',
+    },
+    '109.0b2',
+), (
+    {
+        'maven2/org/mozilla/components/browser-engine-gecko/108.0.0/browser-engine-gecko-108.0.0.pom':'108.0.0',
+        'maven2/org/mozilla/components/browser-engine-gecko/108.0.0/browser-engine-gecko-108.0.9.pom':'108.0.8',
+        'maven2/org/mozilla/components/browser-engine-gecko/109.0b1/browser-engine-gecko-109.0b1.pom':'109.0b1',
+        'maven2/org/mozilla/components/browser-engine-gecko/109.0/browser-engine-gecko-109.0.pom':'109.0',
+        'maven2/org/mozilla/components/browser-engine-gecko/109.0.1/browser-engine-gecko-109.0.1.pom':'109.0.1',
+    },
+    '109.0.1',
 )))
 def test_get_latest_version(versions_per_path, expected):
     assert get_latest_version(versions_per_path) == expected
