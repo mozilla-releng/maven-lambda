@@ -4,8 +4,8 @@ from freezegun import freeze_time
 from unittest.mock import MagicMock, call
 
 from maven_lambda.metadata import lambda_handler as metadata_lambda_handler
-import maven_lambda.copy
-from maven_lambda.copy import lambda_handler as copy_lambda_handler
+import maven_lambda.copy_to_bucket
+from maven_lambda.copy_to_bucket import lambda_handler as copy_lambda_handler
 
 
 @freeze_time('2018-10-29 16:00:30')
@@ -265,8 +265,8 @@ def test_copy_lambda_handler_not_found(s3_event):
     s3 = MagicMock()
     boto3.client = MagicMock(return_value=s3)
     def f(*args):
-        raise maven_lambda.copy.NotFound()
-    maven_lambda.copy.s3_object_has_more_than_one_version = f
+        raise maven_lambda.copy_to_bucket.NotFound()
+    maven_lambda.copy_to_bucket.s3_object_has_more_than_one_version = f
     assert copy_lambda_handler(s3_event, {}) == {"statusCode": 404}
 
 
@@ -278,7 +278,7 @@ def test_copy_lambda_handler_conflict(s3_event):
     boto3.client = MagicMock(return_value=s3)
     def f(*args):
         return True
-    maven_lambda.copy.s3_object_has_more_than_one_version = f
+    maven_lambda.copy_to_bucket.s3_object_has_more_than_one_version = f
     assert copy_lambda_handler(s3_event, {}) == {"statusCode": 409}
 
 def test_copy_lambda_handler_conflict(s3_event):
@@ -289,7 +289,7 @@ def test_copy_lambda_handler_conflict(s3_event):
     boto3.client = MagicMock(return_value=s3)
     def f(*args):
         return False
-    maven_lambda.copy.s3_object_has_more_than_one_version = f
+    maven_lambda.copy_to_bucket.s3_object_has_more_than_one_version = f
     assert copy_lambda_handler(s3_event, {}) == {"statusCode": 200}
     s3.copy_object.assert_called_once_with(
         Bucket=target_bucket,
